@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DISC Platform</title>
+
+  <!-- ════════════════════════════════════════════════
+       FONTES — Google Fonts
+  ════════════════════════════════════════════════ -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- ════════════════════════════════════════════════
+       ESTILOS — style.css
+       Contém tokens, reset, componentes e todas as
+       telas (auth, quiz, resultado, admin).
+  ════════════════════════════════════════════════ -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- ════════════════════════════════════════════════
+       BIBLIOTECAS EXTERNAS (CDN)
+       Carregadas antes do JavaScript próprio para
+       garantir que window.jspdf e Chart estejam
+       disponíveis quando app.js inicializa.
+  ════════════════════════════════════════════════ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     TELA: AUTENTICAÇÃO
+     Exibida por padrão. Gerenciada por auth.js.
+══════════════════════════════════════════════════ -->
+<div id="screen-auth">
+  <div class="auth-left">
+    <div class="auth-brand">
+      <span class="auth-brand-dot"></span> DISC Platform
+    </div>
+    <div class="auth-hero-text">
+      <h2>Avaliações comportamentais<br><em>que revelam potenciais</em></h2>
+      <p>Plataforma para gestão completa e análise de perfis DISC de forma segura e com isolamento por conta</p>
+      <div class="auth-disc-pills">
+        <div class="adp adp-d">● Dominância</div>
+        <div class="adp adp-i">● Influência</div>
+        <div class="adp adp-s">● Estabilidade</div>
+        <div class="adp adp-c">● Conformidade</div>
+      </div>
+    </div>
+    <div class="auth-footer-note">© 2025 DISC Platform · Dados isolados por conta de gestor</div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">Entrar</button>
+        <button class="auth-tab"        onclick="switchAuthTab('register')">Criar Conta</button>
+      </div>
+
+      <!-- FORMULÁRIO: LOGIN -->
+      <div id="auth-login">
+        <h3 class="auth-form-title">Bem-vindo de volta</h3>
+        <p class="auth-form-sub">Acesse o painel da sua conta com e-mail e senha.</p>
+        <div id="login-msg" class="auth-msg"></div>
+
+        <div class="field">
+          <label>E-mail <span>*</span></label>
+          <input type="email" id="login-email" placeholder="voce@exemplo.com">
+        </div>
+
+        <div class="field">
+          <label>Senha <span>*</span></label>
+          <div class="pass-wrap">
+            <input type="password" id="login-pass" placeholder="••••••••"
+                   onkeydown="if(event.key==='Enter')doLogin()">
+            <!-- Botão de mostrar/ocultar senha — gerenciado por auth.js -->
+            <button type="button" class="pass-toggle" id="login-pass-toggle"
+                    onclick="togglePassVisibility('login-pass','login-pass-toggle')"
+                    title="Mostrar / ocultar senha"
+                    aria-label="Alternar visibilidade da senha">
+              <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:8px"
+                onclick="doLogin()">Entrar na Plataforma →</button>
+
+        <p style="text-align:center;margin-top:20px;font-size:.82rem;color:var(--text3)">
+          Não tem conta?
+          <a href="#" style="color:var(--accent);text-decoration:none"
+             onclick="switchAuthTab('register')">Cadastre-se gratuitamente</a>
+        </p>
+
+        <!-- Acesso rápido para demonstração -->
+        <div style="margin-top:24px;padding:14px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border)">
+          <p style="font-size:.72rem;color:var(--text3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">
+            Acesso rápido — Demo
+          </p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center"
+                    onclick="loginDemo()">▶ Conta Demo</button>
+            <button class="btn btn-sm"
+                    style="flex:1;justify-content:center;background:rgba(197,167,107,.1);border:1px solid rgba(197,167,107,.3);color:var(--accent)"
+                    onclick="loginSuperAdmin()">★ Super-Admin</button>
+          </div>
+        </div>
+
+        <div class="superadmin-hint">★ Super-Admin: acesso global a todos os participantes do sistema</div>
+      </div><!-- /auth-login -->
+
+      <!-- FORMULÁRIO: CADASTRO -->
+      <div id="auth-register" class="hidden">
+        <h3 class="auth-form-title">Criar sua conta</h3>
+        <p class="auth-form-sub">Cadastre-se e comece a aplicar e gerenciar avaliações DISC.</p>
+        <div id="reg-msg" class="auth-msg"></div>
+        <div class="field"><label>Nome / Organização <span>*</span></label><input type="text" id="reg-name" placeholder="Seu nome ou nome da organização"></div>
+        <div class="field"><label>E-mail <span>*</span></label><input type="email" id="reg-email" placeholder="voce@email.com"></div>
+        <div class="field"><label>Senha <span>*</span></label><input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres"></div>
+        <div class="field"><label>Confirmar Senha <span>*</span></label><input type="password" id="reg-pass2" placeholder="Repita a senha"></div>
+        <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:8px"
+                onclick="doRegister()">Criar Conta Gratuita →</button>
+      </div><!-- /auth-register -->
+
+    </div><!-- /auth-card -->
+  </div><!-- /auth-right -->
+</div><!-- /screen-auth -->
+
+<!-- ══════════════════════════════════════════════════
+     TELA: IDENTIFICAÇÃO DO PARTICIPANTE
+     Exibida antes do quiz. Gerenciada por app.js.
+══════════════════════════════════════════════════ -->
+<div id="screen-ident" class="hidden">
+  <div class="ident-card fade">
+    <div class="logo">DISC Platform</div>
+
+    <!-- Banner exibido apenas quando o acesso é via link externo -->
+    <div class="ext-banner hidden" id="ext-banner">
+      🔗 Avaliação solicitada via link externo
+    </div>
+
+    <h2>Antes de começar</h2>
+    <p>Preencha seus dados para iniciarmos a avaliação. Suas respostas são confidenciais.</p>
+
+    <div id="ident-account-badge"
+         style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:28px;font-size:.85rem;color:var(--text2)">
+      Avaliação aplicada por: <strong id="ident-account-name" style="color:var(--text)"></strong>
+    </div>
+
+    <div class="field">
+      <label>Nome Completo <span>*</span></label>
+      <input type="text" id="ident-name" placeholder="Seu nome completo"
+             oninput="validateIdentForm()">
+      <span class="err-msg">Informe seu nome completo.</span>
+    </div>
+    <div class="field">
+      <label>Telefone com DDD <span>*</span></label>
+      <input type="tel" id="ident-phone" placeholder="(00) 00000-0000"
+             oninput="phoneMask(this);validateIdentForm()">
+      <span class="err-msg">Informe um telefone válido.</span>
+    </div>
+    <div class="field">
+      <label>E-mail <span style="color:var(--text3);font-size:.7rem;font-weight:400">(opcional)</span></label>
+      <input type="email" id="ident-email" placeholder="seu@email.com">
+    </div>
+
+    <button class="btn btn-gold" id="btn-start-quiz"
+            style="width:100%;justify-content:center"
+            onclick="startQuiz(event)" disabled>
+      Iniciar Avaliação →
+    </button>
+    <p style="margin-top:16px;font-size:.78rem;color:var(--text3);text-align:center">
+      Suas respostas são confidenciais e protegidas.
+    </p>
+  </div>
+</div><!-- /screen-ident -->
+
+<!-- ══════════════════════════════════════════════════
+     TELA: QUIZ
+     Renderizada dinamicamente por app.js (renderQ).
+══════════════════════════════════════════════════ -->
+<div id="screen-quiz" class="hidden">
+  <header class="quiz-topbar">
+    <div class="quiz-brand">DISC Platform</div>
+    <div class="quiz-meta">Questão <strong id="q-cur">1</strong> de 20</div>
+  </header>
+  <div class="prog-wrap">
+    <div class="prog-fill" id="prog-fill" style="width:5%"></div>
+  </div>
+  <main class="quiz-body">
+    <div class="q-card fade" id="q-card">
+      <p class="q-num" id="q-num-lbl">QUESTÃO 01 / 20</p>
+      <h2 class="q-text" id="q-text"></h2>
+      <div class="q-opts" id="q-opts"></div>
+      <div class="q-nav">
+        <button class="btn btn-ghost" id="btn-back" onclick="prevQ()" disabled>← Anterior</button>
+        <button class="btn btn-gold"  id="btn-next" onclick="nextQ()" disabled>Próxima →</button>
+      </div>
+    </div>
+  </main>
+</div><!-- /screen-quiz -->
+
+<!-- ══════════════════════════════════════════════════
+     TELA: PROCESSAMENTO / LOADING
+══════════════════════════════════════════════════ -->
+<div id="screen-loading" class="hidden">
+  <div class="spin"></div>
+  <p style="font-family:var(--font-h);font-size:1.1rem;color:var(--text2)">Analisando seu perfil…</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TELA: RESULTADO (participante ou admin)
+     Preenchida por reports.js (showResults).
+══════════════════════════════════════════════════ -->
+<div id="screen-result" class="hidden">
+  <div class="result-wrap">
+    <div class="res-header fade">
+      <p class="res-kicker">Resultado — Perfil Comportamental DISC</p>
+      <h1 class="res-name"    id="res-name"></h1>
+      <p  class="res-tagline" id="res-tagline"></p>
+      <div class="res-sec-badge hidden" id="res-sec-badge">
+        Perfil Secundário: <strong id="res-sec-name" style="color:var(--text)"></strong>
+      </div>
+    </div>
+
+    <!-- Barras de pontuação -->
+    <div class="score-bars">
+      <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--d)">D</span><span class="sbar-name">Dominância</span></div><div class="sbar-track"><div class="sbar-fill" id="bar-d" style="background:var(--d)"></div></div><span class="sbar-pct" id="pct-d">0%</span></div>
+      <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--i)">I</span><span class="sbar-name">Influência</span></div><div class="sbar-track"><div class="sbar-fill" id="bar-i" style="background:var(--i)"></div></div><span class="sbar-pct" id="pct-i">0%</span></div>
+      <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--s)">S</span><span class="sbar-name">Estabilidade</span></div><div class="sbar-track"><div class="sbar-fill" id="bar-s" style="background:var(--s)"></div></div><span class="sbar-pct" id="pct-s">0%</span></div>
+      <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--c)">C</span><span class="sbar-name">Conformidade</span></div><div class="sbar-track"><div class="sbar-fill" id="bar-c" style="background:var(--c)"></div></div><span class="sbar-pct" id="pct-c">0%</span></div>
+    </div>
+
+    <div class="res-desc fade">
+      <h3 id="res-desc-title">Sobre o seu perfil</h3>
+      <div id="res-desc-body"></div>
+    </div>
+    <div class="res-cards fade">
+      <div class="rc"><h4>✦ Pontos Fortes</h4><ul id="res-strengths"></ul></div>
+      <div class="rc"><h4>◎ A Desenvolver</h4><ul id="res-develop"></ul></div>
+      <div class="rc"><h4>◈ Comunicação</h4>  <ul id="res-communication"></ul></div>
+      <div class="rc"><h4>◉ Ambiente Ideal</h4><ul id="res-environment"></ul></div>
+    </div>
+    <div class="res-actions">
+      <button class="btn btn-ghost" id="btn-back-admin" onclick="goToAdmin()">← Painel</button>
+      <button class="btn btn-share" onclick="shareResult()">🔗 Compartilhar</button>
+      <button class="btn btn-gold"  onclick="downloadPDF()">⬇ PDF</button>
+    </div>
+  </div>
+</div><!-- /screen-result -->
+
+<!-- ══════════════════════════════════════════════════
+     TELA: RESULTADO PÚBLICO (link ?share=)
+     Somente leitura — sem login necessário.
+══════════════════════════════════════════════════ -->
+<div id="screen-public" class="hidden">
+  <div class="public-topbar">
+    <div class="public-brand">DISC Platform</div>
+    <div class="public-badge">Resultado Público — Somente Leitura</div>
+  </div>
+  <div class="result-wrap">
+    <div class="res-header fade">
+      <p class="res-kicker" id="pub-kicker">Perfil Comportamental DISC</p>
+      <h1 class="res-name"    id="pub-name"></h1>
+      <p  class="res-tagline" id="pub-tagline"></p>
+      <div class="res-sec-badge hidden" id="pub-sec-badge">
+        Perfil Secundário: <strong id="pub-sec-name" style="color:var(--text)"></strong>
+      </div>
+    </div>
+
+    <!-- Barras de pontuação — IDs com prefixo pub- -->
+    <div class="score-bars">
+      <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--d)">D</span><span class="sbar-name">Dominância</span></div><div class="sbar-track"><div class="sbar-fill" id="pub-bar-d" style="background:var(--d)"></div></div><span class="sbar-pct" id="pub-pct-d">0%</span></div>
+      <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--i)">I</span><span class="sbar-name">Influência</span></div><div class="sbar-track"><div class="sbar-fill" id="pub-bar-i" style="background:var(--i)"></div></div><span class="sbar-pct" id="pub-pct-i">0%</span></div>
+      <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--s)">S</span><span class="sbar-name">Estabilidade</span></div><div class="sbar-track"><div class="sbar-fill" id="pub-bar-s" style="background:var(--s)"></div></div><span class="sbar-pct" id="pub-pct-s">0%</span></div>
+      <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--c)">C</span><span class="sbar-name">Conformidade</span></div><div class="sbar-track"><div class="sbar-fill" id="pub-bar-c" style="background:var(--c)"></div></div><span class="sbar-pct" id="pub-pct-c">0%</span></div>
+    </div>
+
+    <div class="res-desc fade">
+      <h3 id="pub-desc-title">Sobre o perfil</h3>
+      <div id="pub-desc-body"></div>
+    </div>
+    <div class="res-cards fade">
+      <div class="rc"><h4>✦ Pontos Fortes</h4><ul id="pub-strengths"></ul></div>
+      <div class="rc"><h4>◎ A Desenvolver</h4><ul id="pub-develop"></ul></div>
+      <div class="rc"><h4>◈ Comunicação</h4>  <ul id="pub-communication"></ul></div>
+      <div class="rc"><h4>◉ Ambiente Ideal</h4><ul id="pub-environment"></ul></div>
+    </div>
+
+    <p style="text-align:center;font-size:.78rem;color:var(--text3);padding-bottom:48px">
+      Relatório gerado pela DISC Platform ·
+      <a href="#" onclick="showScreen('screen-auth');return false"
+         style="color:var(--accent);text-decoration:none">Criar minha conta</a>
+    </p>
+  </div>
+</div><!-- /screen-public -->
+
+<!-- ══════════════════════════════════════════════════
+     TELA: PAINEL ADMIN
+     Gerenciada por dashboard.js.
+══════════════════════════════════════════════════ -->
+<div id="screen-admin" class="hidden">
+  <aside class="admin-sidebar">
+    <div class="sb-brand">DISC Platform</div>
+    <div class="sb-superadmin-badge hidden" id="sb-superadmin-badge">★ Super-Admin — Visão Global</div>
+
+    <div class="sb-section">Painel</div>
+    <ul class="sb-nav">
+      <li><a onclick="adminTab('tab-overview')"     id="nav-overview"     class="active"><span class="sb-icon">◈</span> Visão Geral</a></li>
+      <li><a onclick="adminTab('tab-participants')" id="nav-participants"><span class="sb-icon">◉</span> Participantes</a></li>
+      <li><a onclick="adminTab('tab-tips')"         id="nav-tips">        <span class="sb-icon">◇</span> Guia de Perfis</a></li>
+    </ul>
+
+    <div class="sb-section">Avaliação</div>
+    <ul class="sb-nav">
+      <li><a onclick="goToIdent()" id="nav-new-eval"><span class="sb-icon">▶</span> Nova Avaliação</a></li>
+    </ul>
+
+    <div class="sb-footer">
+      <div class="sb-account-badge">
+        <div class="sb-account-name" id="sb-aname"></div>
+        <div class="sb-account-id"   id="sb-aid"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center"
+              onclick="doLogout()">Sair</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+
+    <!-- ── ABA: VISÃO GERAL ── -->
+    <div id="tab-overview">
+      <div class="admin-topbar">
+        <div>
+          <h1 class="admin-page-title" id="admin-greeting">Painel</h1>
+          <p  class="admin-page-sub"   id="admin-sub">Resumo das avaliações</p>
+        </div>
+        <button class="btn btn-gold btn-sm" id="btn-new-eval-top" onclick="goToIdent()">+ Nova Avaliação</button>
+      </div>
+
+      <!-- Link externo — Super-Admin (visível apenas para SA) -->
+      <div class="eval-link-box hidden" id="sa-eval-link-box"
+           style="border-color:rgba(197,167,107,.35);background:rgba(197,167,107,.04)">
+        <div class="eval-link-label">🔗 Link de Avaliação Remota — Visão Global</div>
+        <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px;line-height:1.6">
+          Como Super-Admin, você pode enviar este link para qualquer participante responder o teste.
+          Os resultados aparecem automaticamente na Visão Global.
+        </p>
+        <div class="eval-link-row">
+          <div class="eval-link-input" id="sa-eval-link-val"
+               style="display:flex;align-items:center;overflow:hidden;">
+            <a id="sa-eval-link-anchor" href="#" target="_blank"
+               style="color:#3498DB;text-decoration:underline;font-size:.83rem;
+                      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+                      font-family:var(--font-b);word-break:break-all;">
+              Carregando…
+            </a>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="copyEvalLink()">Copiar Link</button>
+        </div>
+        <p style="font-size:.74rem;color:var(--text3);margin-top:10px;line-height:1.5">
+          ⚠ Para links clicáveis em WhatsApp e e-mail, hospede em servidor web (http/https).
+          Arquivos locais (file://) não são reconhecidos como links por apps externos.
+        </p>
+      </div>
+
+      <!-- Link externo — Admin comum -->
+      <div class="eval-link-box" id="eval-link-box">
+        <div class="eval-link-label">🔗 Link de Avaliação Remota</div>
+        <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px;line-height:1.6">
+          Copie e envie este link para que qualquer pessoa responda o teste diretamente,
+          sem precisar fazer login. Os resultados aparecem automaticamente no painel.
+        </p>
+        <div class="eval-link-row">
+          <div class="eval-link-input" id="eval-link-val"
+               style="display:flex;align-items:center;overflow:hidden;">
+            <a id="eval-link-anchor" href="#" target="_blank"
+               style="color:#3498DB;text-decoration:underline;font-size:.83rem;
+                      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+                      font-family:var(--font-b);word-break:break-all;">
+              Carregando…
+            </a>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="copyEvalLink()">Copiar Link</button>
+        </div>
+        <p id="eval-link-warning"
+           style="font-size:.74rem;color:var(--text3);margin-top:10px;line-height:1.5;display:none">
+          ⚠ Você está rodando localmente (file://). Para links clicáveis em WhatsApp
+          ou e-mail, hospede em um servidor web (http/https).
+        </p>
+      </div>
+
+      <div class="stats-grid" id="stats-grid"></div>
+
+      <h3 style="font-family:var(--font-h);font-size:1.1rem;font-weight:700;margin-bottom:16px;color:var(--text2)">
+        Avaliações Recentes
+      </h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Nome</th><th>Perfil</th><th>Data</th></tr></thead>
+          <tbody id="recent-tbody"></tbody>
+        </table>
+      </div>
+    </div><!-- /tab-overview -->
+
+    <!-- ── ABA: PARTICIPANTES ── -->
+    <div id="tab-participants" class="hidden">
+      <div class="admin-topbar">
+        <div>
+          <h1 class="admin-page-title">Participantes</h1>
+          <p  class="admin-page-sub" id="participants-sub">Avaliações vinculadas à sua conta</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-ghost btn-sm" onclick="copyEvalLink()">🔗 Copiar Link</button>
+          <button class="btn btn-gold  btn-sm" id="btn-new-eval-part" onclick="goToIdent()">+ Nova Avaliação</button>
+        </div>
+      </div>
+
+      <!-- Gráficos analíticos — atualizados pelos checkboxes -->
+      <div class="charts-row" id="charts-row">
+        <div class="chart-card">
+          <div class="chart-card-title">Distribuição por Perfil (Pizza)</div>
+          <div class="chart-canvas-wrap"><canvas id="chart-pie" width="200" height="200"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Quantidade por Perfil (Barras)</div>
+          <div class="chart-canvas-wrap"><canvas id="chart-bar"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Toolbar de busca e filtro -->
+      <div class="table-toolbar">
+        <div class="search-box">
+          <span class="ico">🔍</span>
+          <input type="text" id="search-input"
+                 placeholder="Buscar por nome, e-mail ou telefone…"
+                 oninput="filterTable()">
+        </div>
+        <select class="filter-sel" id="filter-disc" onchange="filterTable()">
+          <option value="">Todos os perfis</option>
+          <option value="D">D — Dominância</option>
+          <option value="I">I — Influência</option>
+          <option value="S">S — Estabilidade</option>
+          <option value="C">C — Conformidade</option>
+        </select>
+      </div>
+
+      <!-- Select-all -->
+      <div class="sel-toolbar">
+        <label>
+          <input type="checkbox" id="check-all" onchange="toggleAllChecks(this.checked)">
+          Selecionar todos
+        </label>
+        <span id="sel-count" style="color:var(--text3)">0 selecionados</span>
+      </div>
+
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:36px"></th>
+              <th>Nome</th><th>Telefone</th><th>E-mail</th>
+              <th>Perfil DISC</th><th>Data</th><th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="participants-tbody"></tbody>
+        </table>
+      </div>
+    </div><!-- /tab-participants -->
+
+    <!-- ── ABA: GUIA DE PERFIS ── -->
+    <div id="tab-tips" class="hidden">
+      <div class="admin-topbar">
+        <div>
+          <h1 class="admin-page-title">Guia de Perfis</h1>
+          <p  class="admin-page-sub">Como se relacionar com cada perfil DISC</p>
+        </div>
+      </div>
+      <div class="tips-grid">
+        <div class="tip-card">
+          <div class="tip-letter" style="color:var(--d)">D</div>
+          <div class="tip-name"   style="color:var(--d)">Dominância</div>
+          <p class="tip-text">Seja direto e objetivo. Vá ao ponto sem rodeios. Apresente resultados e fatos. Respeite a autonomia. Reconheça realizações com foco em impacto.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-letter" style="color:var(--i)">I</div>
+          <div class="tip-name"   style="color:var(--i)">Influência</div>
+          <p class="tip-text">Seja entusiasta e aberto. Crie um ambiente positivo. Reconheça contribuições publicamente. Permita expressão de ideias e inclua elementos sociais.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-letter" style="color:var(--s)">S</div>
+          <div class="tip-name"   style="color:var(--s)">Estabilidade</div>
+          <p class="tip-text">Comunique mudanças com antecedência. Valorize lealdade. Dê tempo para processar decisões. Crie ambiente seguro e previsível.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-letter" style="color:var(--c)">C</div>
+          <div class="tip-name"   style="color:var(--c)">Conformidade</div>
+          <p class="tip-text">Apresente dados, análises e evidências. Respeite processos. Dê tempo para análise. Valorize precisão e qualidade do trabalho entregue.</p>
+        </div>
+      </div>
+    </div><!-- /tab-tips -->
+
+  </main>
+</div><!-- /screen-admin -->
+
+<!-- Toast global de feedback -->
+<div id="share-toast">✓ Link copiado para a área de transferência!</div>
+
+<!-- ════════════════════════════════════════════════════
+     SCRIPTS — ORDEM OBRIGATÓRIA
+     1. disc-engine.js  → dados DISC (sem dependências)
+     2. app.js          → CentralDB, MockDB, estado, quiz, init
+     3. auth.js         → login/logout (depende de app.js)
+     4. dashboard.js    → painel admin (depende de app.js + disc-engine)
+     5. reports.js      → resultados e PDF (depende de todos)
+
+     ⚠ NÃO altere a ordem — cada módulo depende dos
+       anteriores já estarem carregados e executados.
+════════════════════════════════════════════════════ -->
+<script src="disc-engine.js"></script>
+<script src="app.js"></script>
+<script src="auth.js"></script>
+<script src="dashboard.js"></script>
+<script src="reports.js"></script>
+
+</body>
+</html>
