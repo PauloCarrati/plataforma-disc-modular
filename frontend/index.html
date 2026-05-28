@@ -4,25 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DISC Platform</title>
-
-  <!-- ════════════════════════════════════════════════
-       FONTES — Google Fonts
-  ════════════════════════════════════════════════ -->
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-  <!-- ════════════════════════════════════════════════
-       ESTILOS — style.css
-       Contém tokens, reset, componentes e todas as
-       telas (auth, quiz, resultado, admin).
-  ════════════════════════════════════════════════ -->
   <link rel="stylesheet" href="style.css">
-
-  <!-- ════════════════════════════════════════════════
-       BIBLIOTECAS EXTERNAS (CDN)
-       Carregadas antes do JavaScript próprio para
-       garantir que window.jspdf e Chart estejam
-       disponíveis quando app.js inicializa.
-  ════════════════════════════════════════════════ -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -30,8 +13,9 @@
 <body>
 
 <!-- ══════════════════════════════════════════════════
-     TELA: AUTENTICAÇÃO
-     Exibida por padrão. Gerenciada por auth.js.
+     TELA: AUTENTICAÇÃO (produção)
+     Visível para todos: apenas Login e Criar Conta.
+     Bloco #dev-access-block só aparece com ?dev=1.
 ══════════════════════════════════════════════════ -->
 <div id="screen-auth">
   <div class="auth-left">
@@ -40,7 +24,7 @@
     </div>
     <div class="auth-hero-text">
       <h2>Avaliações comportamentais<br><em>que revelam potenciais</em></h2>
-      <p>Plataforma para gestão completa e análise de perfis DISC de forma segura e com isolamento por conta</p>
+      <p>Plataforma completa para aplicação, gestão e análise de perfis DISC. Dados isolados por conta, relatórios em PDF e links de avaliação remota.</p>
       <div class="auth-disc-pills">
         <div class="adp adp-d">● Dominância</div>
         <div class="adp adp-i">● Influência</div>
@@ -48,7 +32,33 @@
         <div class="adp adp-c">● Conformidade</div>
       </div>
     </div>
-    <div class="auth-footer-note">© 2025 DISC Platform · Dados isolados por conta de gestor</div>
+
+    <!-- Destaques de valor (substitui as pills simples) -->
+    <div style="display:flex;flex-direction:column;gap:14px;margin-top:40px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:1.1rem;margin-top:1px">🔗</span>
+        <div>
+          <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:2px">Avaliação Remota</div>
+          <div style="font-size:.78rem;color:var(--text3);line-height:1.5">Envie um link e o participante responde de qualquer dispositivo</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:1.1rem;margin-top:1px">📊</span>
+        <div>
+          <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:2px">Relatórios em PDF</div>
+          <div style="font-size:.78rem;color:var(--text3);line-height:1.5">Relatório individual completo gerado em segundos</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:1.1rem;margin-top:1px">🔒</span>
+        <div>
+          <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:2px">Dados Isolados</div>
+          <div style="font-size:.78rem;color:var(--text3);line-height:1.5">Cada conta vê apenas seus próprios participantes</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-footer-note">© 2025 DISC Platform · Todos os direitos reservados</div>
   </div>
 
   <div class="auth-right">
@@ -58,27 +68,26 @@
         <button class="auth-tab"        onclick="switchAuthTab('register')">Criar Conta</button>
       </div>
 
-      <!-- FORMULÁRIO: LOGIN -->
+      <!-- ══════════ FORMULÁRIO: LOGIN ══════════ -->
       <div id="auth-login">
         <h3 class="auth-form-title">Bem-vindo de volta</h3>
-        <p class="auth-form-sub">Acesse o painel da sua conta com e-mail e senha.</p>
+        <p class="auth-form-sub">Acesse sua conta para gerenciar avaliações DISC.</p>
         <div id="login-msg" class="auth-msg"></div>
 
         <div class="field">
           <label>E-mail <span>*</span></label>
-          <input type="email" id="login-email" placeholder="voce@exemplo.com">
+          <input type="email" id="login-email" placeholder="voce@empresa.com"
+                 onkeydown="if(event.key==='Enter')doLogin()" autocomplete="email">
         </div>
 
         <div class="field">
           <label>Senha <span>*</span></label>
           <div class="pass-wrap">
             <input type="password" id="login-pass" placeholder="••••••••"
-                   onkeydown="if(event.key==='Enter')doLogin()">
-            <!-- Botão de mostrar/ocultar senha — gerenciado por auth.js -->
+                   onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password">
             <button type="button" class="pass-toggle" id="login-pass-toggle"
                     onclick="togglePassVisibility('login-pass','login-pass-toggle')"
-                    title="Mostrar / ocultar senha"
-                    aria-label="Alternar visibilidade da senha">
+                    title="Mostrar / ocultar senha" aria-label="Alternar visibilidade da senha">
               <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -94,20 +103,25 @@
           </div>
         </div>
 
-        <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:8px"
+        <!-- Link "Esqueci minha senha" -->
+        <a href="#" class="forgot-link" onclick="showRecovery();return false">
+          Esqueci minha senha
+        </a>
+
+        <button class="btn btn-gold" style="width:100%;justify-content:center"
                 onclick="doLogin()">Entrar na Plataforma →</button>
 
         <p style="text-align:center;margin-top:20px;font-size:.82rem;color:var(--text3)">
-          Não tem conta?
+          Ainda não tem conta?
           <a href="#" style="color:var(--accent);text-decoration:none"
-             onclick="switchAuthTab('register')">Cadastre-se gratuitamente</a>
+             onclick="switchAuthTab('register');return false">Crie gratuitamente</a>
         </p>
 
-        <!-- Acesso rápido para demonstração -->
-        <div style="margin-top:24px;padding:14px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border)">
-          <p style="font-size:.72rem;color:var(--text3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">
-            Acesso rápido — Demo
-          </p>
+        <!-- ── Bloco de desenvolvimento — oculto por padrão ──
+             Aparece somente com ?dev=1 na URL.
+             checkDevMode() em auth.js controla a visibilidade. -->
+        <div id="dev-access-block" style="display:none">
+          <div class="auth-divider">acesso interno</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center"
                     onclick="loginDemo()">▶ Conta Demo</button>
@@ -115,22 +129,44 @@
                     style="flex:1;justify-content:center;background:rgba(197,167,107,.1);border:1px solid rgba(197,167,107,.3);color:var(--accent)"
                     onclick="loginSuperAdmin()">★ Super-Admin</button>
           </div>
+          <div style="margin-top:10px;padding:10px 14px;background:rgba(255,77,77,.06);border:1px solid rgba(255,77,77,.15);border-radius:var(--r);font-size:.72rem;color:#ff8080;text-align:center">
+            ⚠ Modo de desenvolvimento — não compartilhe esta URL
+          </div>
         </div>
 
-        <div class="superadmin-hint">★ Super-Admin: acesso global a todos os participantes do sistema</div>
       </div><!-- /auth-login -->
 
-      <!-- FORMULÁRIO: CADASTRO -->
+      <!-- ══════════ FORMULÁRIO: CADASTRO ══════════ -->
       <div id="auth-register" class="hidden">
-        <h3 class="auth-form-title">Criar sua conta</h3>
-        <p class="auth-form-sub">Cadastre-se e comece a aplicar e gerenciar avaliações DISC.</p>
+        <h3 class="auth-form-title">Crie sua conta</h3>
+        <p class="auth-form-sub">Comece a aplicar e gerenciar avaliações DISC gratuitamente.</p>
         <div id="reg-msg" class="auth-msg"></div>
-        <div class="field"><label>Nome / Organização <span>*</span></label><input type="text" id="reg-name" placeholder="Seu nome ou nome da organização"></div>
-        <div class="field"><label>E-mail <span>*</span></label><input type="email" id="reg-email" placeholder="voce@email.com"></div>
-        <div class="field"><label>Senha <span>*</span></label><input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres"></div>
-        <div class="field"><label>Confirmar Senha <span>*</span></label><input type="password" id="reg-pass2" placeholder="Repita a senha"></div>
-        <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:8px"
+
+        <div class="field">
+          <label>Nome / Organização <span>*</span></label>
+          <input type="text" id="reg-name" placeholder="Seu nome ou empresa" autocomplete="name">
+        </div>
+        <div class="field">
+          <label>E-mail <span>*</span></label>
+          <input type="email" id="reg-email" placeholder="voce@empresa.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Senha <span>*</span></label>
+          <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label>Confirmar Senha <span>*</span></label>
+          <input type="password" id="reg-pass2" placeholder="Repita a senha" autocomplete="new-password">
+        </div>
+
+        <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:4px"
                 onclick="doRegister()">Criar Conta Gratuita →</button>
+
+        <p style="text-align:center;margin-top:16px;font-size:.78rem;color:var(--text3);line-height:1.6">
+          Ao criar sua conta você concorda com os<br>
+          <a href="#" style="color:var(--accent);text-decoration:none">Termos de Uso</a> e
+          <a href="#" style="color:var(--accent);text-decoration:none">Política de Privacidade</a>
+        </p>
       </div><!-- /auth-register -->
 
     </div><!-- /auth-card -->
@@ -138,26 +174,183 @@
 </div><!-- /screen-auth -->
 
 <!-- ══════════════════════════════════════════════════
+     TELA: RECUPERAÇÃO DE SENHA
+     Gerenciada por auth.js — showRecovery(), recoveryNext()
+══════════════════════════════════════════════════ -->
+<div id="screen-recovery" class="hidden">
+  <div class="recovery-card">
+
+    <div class="recovery-brand">
+      <span style="font-size:1rem">◈</span> DISC Platform
+    </div>
+
+    <!-- Indicador de progresso -->
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot-1"></div>
+      <div class="step-dot"        id="dot-2"></div>
+      <div class="step-dot"        id="dot-3"></div>
+    </div>
+
+    <!-- ── ETAPA 1: Informar e-mail ── -->
+    <div class="recovery-step active" id="rec-step-1">
+      <span class="recovery-icon">🔑</span>
+      <h2 class="recovery-title">Recuperar Senha</h2>
+      <p class="recovery-sub">
+        Informe o e-mail cadastrado na sua conta.<br>
+        Enviaremos um código de verificação.
+      </p>
+      <div id="rec-msg-1" class="auth-msg"></div>
+      <div class="field">
+        <label>E-mail cadastrado <span>*</span></label>
+        <input type="email" id="rec-email" placeholder="voce@empresa.com"
+               autocomplete="email"
+               onkeydown="if(event.key==='Enter')recoveryNext(1)">
+      </div>
+      <button class="btn btn-gold" id="rec-btn-1"
+              style="width:100%;justify-content:center"
+              onclick="recoveryNext(1)">Enviar Código →</button>
+      <button class="back-to-login" onclick="recoveryBack()">
+        ← Voltar ao login
+      </button>
+    </div>
+
+    <!-- ── ETAPA 2: Verificar código ── -->
+    <div class="recovery-step" id="rec-step-2">
+      <span class="recovery-icon">📩</span>
+      <h2 class="recovery-title">Verifique seu E-mail</h2>
+      <p class="recovery-sub">
+        Um código foi enviado para<br>
+        <strong id="rec-token-email" style="color:var(--accent)"></strong>
+      </p>
+
+      <!-- Token simulado (em produção: chegaria por e-mail) -->
+      <div class="token-display">
+        <div class="token-label">Código de Verificação</div>
+        <div class="token-value" id="rec-token-value">——————</div>
+        <div class="token-note">
+          ⚠ Simulação local — em produção este código<br>
+          chegaria por e-mail ao participante.
+        </div>
+      </div>
+
+      <div id="rec-msg-2" class="auth-msg"></div>
+      <div class="field">
+        <label>Digite o código <span>*</span></label>
+        <input type="text" id="rec-token-input"
+               placeholder="000000" maxlength="6"
+               style="letter-spacing:.3em;font-size:1.2rem;text-align:center;font-family:monospace"
+               oninput="this.value=this.value.replace(/\D/g,'')"
+               onkeydown="if(event.key==='Enter')recoveryNext(2)">
+      </div>
+      <button class="btn btn-gold"
+              style="width:100%;justify-content:center"
+              onclick="recoveryNext(2)">Verificar Código →</button>
+      <p style="text-align:center;margin-top:16px;font-size:.78rem;color:var(--text3)">
+        Não recebeu?
+        <a href="#" style="color:var(--accent);text-decoration:none"
+           onclick="recoveryResend();return false">Reenviar código</a>
+      </p>
+      <button class="back-to-login" onclick="recoveryBack()">← Voltar ao login</button>
+    </div>
+
+    <!-- ── ETAPA 3: Nova senha ── -->
+    <div class="recovery-step" id="rec-step-3">
+      <span class="recovery-icon">🔐</span>
+      <h2 class="recovery-title">Nova Senha</h2>
+      <p class="recovery-sub">Crie uma senha forte para sua conta.</p>
+      <div id="rec-msg-3" class="auth-msg"></div>
+
+      <div class="field">
+        <label>Nova Senha <span>*</span></label>
+        <div class="pass-wrap">
+          <input type="password" id="rec-new-pass" placeholder="Mínimo 6 caracteres"
+                 autocomplete="new-password"
+                 oninput="checkPassStrength('rec-new-pass')"
+                 onkeydown="if(event.key==='Enter')recoveryNext(3)">
+          <button type="button" class="pass-toggle" id="rec-pass-toggle-1"
+                  onclick="togglePassVisibility('rec-new-pass','rec-pass-toggle-1')"
+                  title="Mostrar senha" aria-label="Mostrar senha">
+            <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+        <!-- Medidor de força da senha -->
+        <div class="pass-strength">
+          <div class="pass-strength-fill" id="pass-strength-fill"></div>
+        </div>
+        <div class="pass-strength-label" id="pass-strength-label"></div>
+      </div>
+
+      <div class="field">
+        <label>Confirmar Nova Senha <span>*</span></label>
+        <div class="pass-wrap">
+          <input type="password" id="rec-conf-pass" placeholder="Repita a nova senha"
+                 autocomplete="new-password"
+                 onkeydown="if(event.key==='Enter')recoveryNext(3)">
+          <button type="button" class="pass-toggle" id="rec-pass-toggle-2"
+                  onclick="togglePassVisibility('rec-conf-pass','rec-pass-toggle-2')"
+                  title="Mostrar senha" aria-label="Mostrar senha">
+            <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn btn-gold"
+              style="width:100%;justify-content:center"
+              onclick="recoveryNext(3)">Salvar Nova Senha →</button>
+      <button class="back-to-login" onclick="recoveryBack()">← Voltar ao login</button>
+    </div>
+
+    <!-- ── ETAPA 4: Sucesso ── -->
+    <div class="recovery-step" id="rec-step-4">
+      <div style="text-align:center;padding:16px 0">
+        <div class="recovery-success-icon">✓</div>
+        <h2 class="recovery-title">Senha Atualizada!</h2>
+        <p class="recovery-sub">
+          Sua senha foi redefinida com sucesso.<br>
+          Agora você pode fazer login com a nova senha.
+        </p>
+        <button class="btn btn-gold"
+                style="width:100%;justify-content:center"
+                onclick="recoveryBack()">Ir para o Login →</button>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /screen-recovery -->
+
+<!-- ══════════════════════════════════════════════════
      TELA: IDENTIFICAÇÃO DO PARTICIPANTE
-     Exibida antes do quiz. Gerenciada por app.js.
 ══════════════════════════════════════════════════ -->
 <div id="screen-ident" class="hidden">
   <div class="ident-card fade">
     <div class="logo">DISC Platform</div>
-
-    <!-- Banner exibido apenas quando o acesso é via link externo -->
-    <div class="ext-banner hidden" id="ext-banner">
-      🔗 Avaliação solicitada via link externo
-    </div>
-
+    <div class="ext-banner hidden" id="ext-banner">🔗 Avaliação solicitada via link externo</div>
     <h2>Antes de começar</h2>
     <p>Preencha seus dados para iniciarmos a avaliação. Suas respostas são confidenciais.</p>
-
     <div id="ident-account-badge"
          style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:28px;font-size:.85rem;color:var(--text2)">
       Avaliação aplicada por: <strong id="ident-account-name" style="color:var(--text)"></strong>
     </div>
-
     <div class="field">
       <label>Nome Completo <span>*</span></label>
       <input type="text" id="ident-name" placeholder="Seu nome completo"
@@ -171,24 +364,22 @@
       <span class="err-msg">Informe um telefone válido.</span>
     </div>
     <div class="field">
-      <label>E-mail <span style="color:var(--text3);font-size:.7rem;font-weight:400">(opcional)</span></label>
+      <label>E-mail
+        <span style="color:var(--text3);font-size:.7rem;font-weight:400">(opcional)</span>
+      </label>
       <input type="email" id="ident-email" placeholder="seu@email.com">
     </div>
-
     <button class="btn btn-gold" id="btn-start-quiz"
             style="width:100%;justify-content:center"
-            onclick="startQuiz(event)" disabled>
-      Iniciar Avaliação →
-    </button>
+            onclick="startQuiz(event)" disabled>Iniciar Avaliação →</button>
     <p style="margin-top:16px;font-size:.78rem;color:var(--text3);text-align:center">
       Suas respostas são confidenciais e protegidas.
     </p>
   </div>
-</div><!-- /screen-ident -->
+</div>
 
 <!-- ══════════════════════════════════════════════════
      TELA: QUIZ
-     Renderizada dinamicamente por app.js (renderQ).
 ══════════════════════════════════════════════════ -->
 <div id="screen-quiz" class="hidden">
   <header class="quiz-topbar">
@@ -209,10 +400,10 @@
       </div>
     </div>
   </main>
-</div><!-- /screen-quiz -->
+</div>
 
 <!-- ══════════════════════════════════════════════════
-     TELA: PROCESSAMENTO / LOADING
+     TELA: PROCESSAMENTO
 ══════════════════════════════════════════════════ -->
 <div id="screen-loading" class="hidden">
   <div class="spin"></div>
@@ -220,8 +411,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════
-     TELA: RESULTADO (participante ou admin)
-     Preenchida por reports.js (showResults).
+     TELA: RESULTADO
 ══════════════════════════════════════════════════ -->
 <div id="screen-result" class="hidden">
   <div class="result-wrap">
@@ -233,15 +423,12 @@
         Perfil Secundário: <strong id="res-sec-name" style="color:var(--text)"></strong>
       </div>
     </div>
-
-    <!-- Barras de pontuação -->
     <div class="score-bars">
       <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--d)">D</span><span class="sbar-name">Dominância</span></div><div class="sbar-track"><div class="sbar-fill" id="bar-d" style="background:var(--d)"></div></div><span class="sbar-pct" id="pct-d">0%</span></div>
       <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--i)">I</span><span class="sbar-name">Influência</span></div><div class="sbar-track"><div class="sbar-fill" id="bar-i" style="background:var(--i)"></div></div><span class="sbar-pct" id="pct-i">0%</span></div>
       <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--s)">S</span><span class="sbar-name">Estabilidade</span></div><div class="sbar-track"><div class="sbar-fill" id="bar-s" style="background:var(--s)"></div></div><span class="sbar-pct" id="pct-s">0%</span></div>
       <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--c)">C</span><span class="sbar-name">Conformidade</span></div><div class="sbar-track"><div class="sbar-fill" id="bar-c" style="background:var(--c)"></div></div><span class="sbar-pct" id="pct-c">0%</span></div>
     </div>
-
     <div class="res-desc fade">
       <h3 id="res-desc-title">Sobre o seu perfil</h3>
       <div id="res-desc-body"></div>
@@ -253,16 +440,16 @@
       <div class="rc"><h4>◉ Ambiente Ideal</h4><ul id="res-environment"></ul></div>
     </div>
     <div class="res-actions">
-      <button class="btn btn-ghost" id="btn-back-admin" onclick="goToAdmin()">← Painel</button>
+      <button class="btn btn-ghost" id="btn-back-admin"
+              onclick="goToAdmin()" style="display:none">← Painel</button>
       <button class="btn btn-share" onclick="shareResult()">🔗 Compartilhar</button>
       <button class="btn btn-gold"  onclick="downloadPDF()">⬇ PDF</button>
     </div>
   </div>
-</div><!-- /screen-result -->
+</div>
 
 <!-- ══════════════════════════════════════════════════
-     TELA: RESULTADO PÚBLICO (link ?share=)
-     Somente leitura — sem login necessário.
+     TELA: RESULTADO PÚBLICO (?share=ID)
 ══════════════════════════════════════════════════ -->
 <div id="screen-public" class="hidden">
   <div class="public-topbar">
@@ -271,22 +458,19 @@
   </div>
   <div class="result-wrap">
     <div class="res-header fade">
-      <p class="res-kicker" id="pub-kicker">Perfil Comportamental DISC</p>
+      <p class="res-kicker">Perfil Comportamental DISC</p>
       <h1 class="res-name"    id="pub-name"></h1>
       <p  class="res-tagline" id="pub-tagline"></p>
       <div class="res-sec-badge hidden" id="pub-sec-badge">
         Perfil Secundário: <strong id="pub-sec-name" style="color:var(--text)"></strong>
       </div>
     </div>
-
-    <!-- Barras de pontuação — IDs com prefixo pub- -->
     <div class="score-bars">
       <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--d)">D</span><span class="sbar-name">Dominância</span></div><div class="sbar-track"><div class="sbar-fill" id="pub-bar-d" style="background:var(--d)"></div></div><span class="sbar-pct" id="pub-pct-d">0%</span></div>
       <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--i)">I</span><span class="sbar-name">Influência</span></div><div class="sbar-track"><div class="sbar-fill" id="pub-bar-i" style="background:var(--i)"></div></div><span class="sbar-pct" id="pub-pct-i">0%</span></div>
       <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--s)">S</span><span class="sbar-name">Estabilidade</span></div><div class="sbar-track"><div class="sbar-fill" id="pub-bar-s" style="background:var(--s)"></div></div><span class="sbar-pct" id="pub-pct-s">0%</span></div>
       <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--c)">C</span><span class="sbar-name">Conformidade</span></div><div class="sbar-track"><div class="sbar-fill" id="pub-bar-c" style="background:var(--c)"></div></div><span class="sbar-pct" id="pub-pct-c">0%</span></div>
     </div>
-
     <div class="res-desc fade">
       <h3 id="pub-desc-title">Sobre o perfil</h3>
       <div id="pub-desc-body"></div>
@@ -297,36 +481,31 @@
       <div class="rc"><h4>◈ Comunicação</h4>  <ul id="pub-communication"></ul></div>
       <div class="rc"><h4>◉ Ambiente Ideal</h4><ul id="pub-environment"></ul></div>
     </div>
-
     <p style="text-align:center;font-size:.78rem;color:var(--text3);padding-bottom:48px">
       Relatório gerado pela DISC Platform ·
       <a href="#" onclick="showScreen('screen-auth');return false"
          style="color:var(--accent);text-decoration:none">Criar minha conta</a>
     </p>
   </div>
-</div><!-- /screen-public -->
+</div>
 
 <!-- ══════════════════════════════════════════════════
      TELA: PAINEL ADMIN
-     Gerenciada por dashboard.js.
 ══════════════════════════════════════════════════ -->
 <div id="screen-admin" class="hidden">
   <aside class="admin-sidebar">
     <div class="sb-brand">DISC Platform</div>
     <div class="sb-superadmin-badge hidden" id="sb-superadmin-badge">★ Super-Admin — Visão Global</div>
-
     <div class="sb-section">Painel</div>
     <ul class="sb-nav">
       <li><a onclick="adminTab('tab-overview')"     id="nav-overview"     class="active"><span class="sb-icon">◈</span> Visão Geral</a></li>
       <li><a onclick="adminTab('tab-participants')" id="nav-participants"><span class="sb-icon">◉</span> Participantes</a></li>
       <li><a onclick="adminTab('tab-tips')"         id="nav-tips">        <span class="sb-icon">◇</span> Guia de Perfis</a></li>
     </ul>
-
     <div class="sb-section">Avaliação</div>
     <ul class="sb-nav">
       <li><a onclick="goToIdent()" id="nav-new-eval"><span class="sb-icon">▶</span> Nova Avaliação</a></li>
     </ul>
-
     <div class="sb-footer">
       <div class="sb-account-badge">
         <div class="sb-account-name" id="sb-aname"></div>
@@ -338,8 +517,7 @@
   </aside>
 
   <main class="admin-main">
-
-    <!-- ── ABA: VISÃO GERAL ── -->
+    <!-- ABA: VISÃO GERAL -->
     <div id="tab-overview">
       <div class="admin-topbar">
         <div>
@@ -349,29 +527,24 @@
         <button class="btn btn-gold btn-sm" id="btn-new-eval-top" onclick="goToIdent()">+ Nova Avaliação</button>
       </div>
 
-      <!-- Link externo — Super-Admin (visível apenas para SA) -->
+      <!-- Link externo — Super-Admin -->
       <div class="eval-link-box hidden" id="sa-eval-link-box"
            style="border-color:rgba(197,167,107,.35);background:rgba(197,167,107,.04)">
         <div class="eval-link-label">🔗 Link de Avaliação Remota — Visão Global</div>
         <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px;line-height:1.6">
           Como Super-Admin, você pode enviar este link para qualquer participante responder o teste.
-          Os resultados aparecem automaticamente na Visão Global.
         </p>
         <div class="eval-link-row">
-          <div class="eval-link-input" id="sa-eval-link-val"
-               style="display:flex;align-items:center;overflow:hidden;">
+          <div class="eval-link-input" style="display:flex;align-items:center;overflow:hidden;">
             <a id="sa-eval-link-anchor" href="#" target="_blank"
                style="color:#3498DB;text-decoration:underline;font-size:.83rem;
                       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-                      font-family:var(--font-b);word-break:break-all;">
-              Carregando…
-            </a>
+                      font-family:var(--font-b);word-break:break-all;">Carregando…</a>
           </div>
           <button class="btn btn-gold btn-sm" onclick="copyEvalLink()">Copiar Link</button>
         </div>
         <p style="font-size:.74rem;color:var(--text3);margin-top:10px;line-height:1.5">
           ⚠ Para links clicáveis em WhatsApp e e-mail, hospede em servidor web (http/https).
-          Arquivos locais (file://) não são reconhecidos como links por apps externos.
         </p>
       </div>
 
@@ -379,42 +552,34 @@
       <div class="eval-link-box" id="eval-link-box">
         <div class="eval-link-label">🔗 Link de Avaliação Remota</div>
         <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px;line-height:1.6">
-          Copie e envie este link para que qualquer pessoa responda o teste diretamente,
-          sem precisar fazer login. Os resultados aparecem automaticamente no painel.
+          Copie e envie este link para que qualquer pessoa responda o teste sem precisar fazer login.
         </p>
         <div class="eval-link-row">
-          <div class="eval-link-input" id="eval-link-val"
-               style="display:flex;align-items:center;overflow:hidden;">
+          <div class="eval-link-input" style="display:flex;align-items:center;overflow:hidden;">
             <a id="eval-link-anchor" href="#" target="_blank"
                style="color:#3498DB;text-decoration:underline;font-size:.83rem;
                       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-                      font-family:var(--font-b);word-break:break-all;">
-              Carregando…
-            </a>
+                      font-family:var(--font-b);word-break:break-all;">Carregando…</a>
           </div>
           <button class="btn btn-gold btn-sm" onclick="copyEvalLink()">Copiar Link</button>
         </div>
         <p id="eval-link-warning"
            style="font-size:.74rem;color:var(--text3);margin-top:10px;line-height:1.5;display:none">
-          ⚠ Você está rodando localmente (file://). Para links clicáveis em WhatsApp
-          ou e-mail, hospede em um servidor web (http/https).
+          ⚠ Você está rodando localmente (file://). Para links clicáveis, hospede em http/https.
         </p>
       </div>
 
       <div class="stats-grid" id="stats-grid"></div>
-
-      <h3 style="font-family:var(--font-h);font-size:1.1rem;font-weight:700;margin-bottom:16px;color:var(--text2)">
-        Avaliações Recentes
-      </h3>
+      <h3 style="font-family:var(--font-h);font-size:1.1rem;font-weight:700;margin-bottom:16px;color:var(--text2)">Avaliações Recentes</h3>
       <div class="data-table-wrap">
         <table class="data-table">
           <thead><tr><th>Nome</th><th>Perfil</th><th>Data</th></tr></thead>
           <tbody id="recent-tbody"></tbody>
         </table>
       </div>
-    </div><!-- /tab-overview -->
+    </div>
 
-    <!-- ── ABA: PARTICIPANTES ── -->
+    <!-- ABA: PARTICIPANTES -->
     <div id="tab-participants" class="hidden">
       <div class="admin-topbar">
         <div>
@@ -426,9 +591,7 @@
           <button class="btn btn-gold  btn-sm" id="btn-new-eval-part" onclick="goToIdent()">+ Nova Avaliação</button>
         </div>
       </div>
-
-      <!-- Gráficos analíticos — atualizados pelos checkboxes -->
-      <div class="charts-row" id="charts-row">
+      <div class="charts-row">
         <div class="chart-card">
           <div class="chart-card-title">Distribuição por Perfil (Pizza)</div>
           <div class="chart-canvas-wrap"><canvas id="chart-pie" width="200" height="200"></canvas></div>
@@ -438,8 +601,6 @@
           <div class="chart-canvas-wrap"><canvas id="chart-bar"></canvas></div>
         </div>
       </div>
-
-      <!-- Toolbar de busca e filtro -->
       <div class="table-toolbar">
         <div class="search-box">
           <span class="ico">🔍</span>
@@ -455,8 +616,6 @@
           <option value="C">C — Conformidade</option>
         </select>
       </div>
-
-      <!-- Select-all -->
       <div class="sel-toolbar">
         <label>
           <input type="checkbox" id="check-all" onchange="toggleAllChecks(this.checked)">
@@ -464,7 +623,6 @@
         </label>
         <span id="sel-count" style="color:var(--text3)">0 selecionados</span>
       </div>
-
       <div class="data-table-wrap">
         <table class="data-table">
           <thead>
@@ -477,9 +635,9 @@
           <tbody id="participants-tbody"></tbody>
         </table>
       </div>
-    </div><!-- /tab-participants -->
+    </div>
 
-    <!-- ── ABA: GUIA DE PERFIS ── -->
+    <!-- ABA: GUIA DE PERFIS -->
     <div id="tab-tips" class="hidden">
       <div class="admin-topbar">
         <div>
@@ -491,7 +649,7 @@
         <div class="tip-card">
           <div class="tip-letter" style="color:var(--d)">D</div>
           <div class="tip-name"   style="color:var(--d)">Dominância</div>
-          <p class="tip-text">Seja direto e objetivo. Vá ao ponto sem rodeios. Apresente resultados e fatos. Respeite a autonomia. Reconheça realizações com foco em impacto.</p>
+          <p class="tip-text">Seja direto e objetivo. Vá ao ponto sem rodeios. Apresente resultados e fatos. Respeite a autonomia e reconheça realizações com foco em impacto.</p>
         </div>
         <div class="tip-card">
           <div class="tip-letter" style="color:var(--i)">I</div>
@@ -509,8 +667,7 @@
           <p class="tip-text">Apresente dados, análises e evidências. Respeite processos. Dê tempo para análise. Valorize precisão e qualidade do trabalho entregue.</p>
         </div>
       </div>
-    </div><!-- /tab-tips -->
-
+    </div>
   </main>
 </div><!-- /screen-admin -->
 
@@ -518,21 +675,20 @@
 <div id="share-toast">✓ Link copiado para a área de transferência!</div>
 
 <!-- ════════════════════════════════════════════════════
-     SCRIPTS — ORDEM OBRIGATÓRIA
+     SCRIPTS — ORDEM OBRIGATÓRIA (não alterar)
      1. disc-engine.js  → dados DISC (sem dependências)
-     2. app.js          → CentralDB, MockDB, estado, quiz, init
-     3. auth.js         → login/logout (depende de app.js)
-     4. dashboard.js    → painel admin (depende de app.js + disc-engine)
-     5. reports.js      → resultados e PDF (depende de todos)
-
-     ⚠ NÃO altere a ordem — cada módulo depende dos
-       anteriores já estarem carregados e executados.
+     2. globals.js      → MockDB, CentralDB, estado, utils
+     3. dashboard.js    → painel; define openAdmin()
+     4. auth.js         → login; chama openAdmin()
+     5. reports.js      → resultados; define showResults()
+     6. app.js          → quiz, init(); chama tudo acima
 ════════════════════════════════════════════════════ -->
 <script src="disc-engine.js"></script>
-<script src="app.js"></script>
-<script src="auth.js"></script>
+<script src="globals.js"></script>
 <script src="dashboard.js"></script>
+<script src="auth.js"></script>
 <script src="reports.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
