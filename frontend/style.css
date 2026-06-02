@@ -333,7 +333,7 @@ body {
 .sbar-name     { font-size: .76rem; color: var(--text2); font-weight: 500; }
 .sbar-track    { flex: 1; height: 9px; background: var(--bg4); border-radius: 99px; overflow: hidden; }
 .sbar-fill     { height: 100%; border-radius: 99px; width: 0; transition: width .9s cubic-bezier(.4,0,.2,1) .2s; }
-.sbar-pct      { width: 40px; text-align: right; font-size: .85rem; font-weight: 700; }
+.sbar-pct      { width: 56px; text-align: right; font-size: .82rem; font-weight: 700; white-space: nowrap; }
 .res-desc      { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2); padding: 28px; margin: 28px 0; }
 .res-desc h3   { font-family: var(--font-h); font-size: 1.15rem; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
 .res-desc p    { font-size: .88rem; color: var(--text2); line-height: 1.75; margin-bottom: 8px; }
@@ -635,3 +635,193 @@ body {
   width: 100%;
 }
 .back-to-login:hover { color: var(--accent); }
+
+/* ══════════════════════════════════════════════════════
+   SISTEMA DE RANKING — Quiz Drag-and-Drop (v8)
+   Arquitetura de slots fixos:
+   • .rank-slot   — posição FIXA (não se move)
+   • .rank-pos    — número + label fixos dentro do slot
+   • .rank-card   — conteúdo arrastável entre slots
+══════════════════════════════════════════════════════ */
+
+/* ── Instrução no topo ── */
+.rank-instructions {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(197,167,107,.07);
+  border: 1px solid rgba(197,167,107,.18);
+  border-radius: var(--r);
+  padding: 10px 16px; margin-bottom: 14px;
+  font-size: .8rem; color: var(--accent); font-weight: 500;
+  line-height: 1.5; transition: opacity .4s ease, max-height .4s ease;
+  overflow: hidden; max-height: 80px;
+}
+.rank-instr-icon {
+  font-size: 1.2rem; flex-shrink: 0;
+  animation: bounce-y 1.4s ease-in-out infinite;
+}
+@keyframes bounce-y {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+.rank-instructions--hidden {
+  opacity: 0; max-height: 0;
+  padding-top: 0; padding-bottom: 0; margin-bottom: 0;
+  pointer-events: none;
+}
+
+/* ── Lista de slots ── */
+.rank-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+/* ── Slot (posição fixa) ── */
+.rank-slot {
+  display: flex; align-items: stretch;
+  border-radius: var(--r); overflow: hidden;
+  border: 1.5px solid var(--border);
+  transition: border-color .2s;
+  background: var(--bg2);
+  min-height: 64px;
+}
+.rank-slot--over {
+  border-color: var(--accent) !important;
+  background: rgba(197,167,107,.06);
+  box-shadow: 0 0 0 3px rgba(197,167,107,.18);
+}
+
+/* ── Coluna de posição — FIXA, não arrastável ── */
+.rank-pos {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-width: 72px; padding: 12px 10px;
+  background: var(--bg3);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0; gap: 3px;
+  transition: background .2s;
+}
+.rank-pos-num {
+  font-family: var(--font-h); font-size: 1.5rem;
+  font-weight: 800; color: var(--accent); line-height: 1;
+}
+.rank-pos-label {
+  font-size: .56rem; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--text3);
+  text-align: center; line-height: 1.35; white-space: nowrap;
+}
+
+/* Slot 1 (mais parecido) — destaque dourado */
+.rank-slot:first-child .rank-pos { background: rgba(197,167,107,.1); }
+.rank-slot:first-child .rank-pos-num { color: var(--accent2); }
+/* Slot 4 (menos parecido) — mais apagado */
+.rank-slot:last-child .rank-pos-num { color: var(--text3); }
+
+/* ── Card de conteúdo — ARRASTÁVEL ── */
+.rank-card {
+  flex: 1; display: flex; align-items: center;
+  gap: 10px; padding: 12px 12px 12px 10px;
+  cursor: grab; user-select: none;
+  transition: background .15s, box-shadow .15s;
+  outline: none; min-width: 0;
+  border-radius: 0;
+}
+.rank-card:hover { background: rgba(197,167,107,.05); }
+.rank-card:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: -2px;
+}
+
+/* ── Handle de arraste (pontos) ── */
+.rank-handle {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3); flex-shrink: 0; width: 20px;
+  transition: color .2s; cursor: grab;
+}
+.rank-card:hover .rank-handle { color: var(--accent); }
+
+/* ── Corpo do card (texto) ── */
+.rank-item-body { flex: 1; min-width: 0; }
+.rank-item-text {
+  font-size: .88rem; color: var(--text2); line-height: 1.55;
+  display: block; transition: color .2s;
+}
+.rank-card:hover .rank-item-text { color: var(--text); }
+
+/* ── Botões ↑ ↓ ── */
+.rank-arrows {
+  display: flex; flex-direction: column; gap: 3px;
+  flex-shrink: 0; align-items: center;
+}
+.rank-arrow-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  background: var(--bg4); border: 1px solid var(--border);
+  border-radius: 6px; cursor: pointer; color: var(--text3);
+  transition: background .15s, color .15s, border-color .15s;
+  padding: 0;
+}
+.rank-arrow-btn:hover {
+  background: var(--accent); color: #0D0D14;
+  border-color: var(--accent);
+}
+.rank-arrow-btn:active { transform: scale(.92); }
+.rank-slot:first-child .rank-arrow-btn[data-dir="up"],
+.rank-slot:last-child  .rank-arrow-btn[data-dir="down"] {
+  opacity: .2; pointer-events: none;
+}
+
+/* ── Estado: sendo arrastado ── */
+.rank-card--dragging {
+  opacity: .3; cursor: grabbing !important;
+}
+
+/* ── Mini-mapa de pontos ── */
+.quiz-dots {
+  display: flex; gap: 4px; align-items: center;
+  flex-wrap: wrap; max-width: 340px;
+}
+.quiz-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--bg4); transition: background .25s, transform .2s;
+  flex-shrink: 0;
+}
+.quiz-dot.dot-done    { background: var(--s); }
+.quiz-dot.dot-current { background: var(--accent); transform: scale(1.5); }
+
+/* ── Badge de confirmação ── */
+.rank-confirm-badge {
+  font-size: .72rem; font-weight: 600; color: var(--text3);
+  letter-spacing: .04em; text-align: center;
+  padding: 4px 10px; border-radius: 99px;
+  transition: color .3s, background .3s;
+}
+.rank-confirm-badge--done {
+  color: var(--s); background: rgba(46,204,113,.08);
+}
+
+/* ── Responsividade mobile ── */
+@media (max-width: 500px) {
+  .rank-pos     { min-width: 58px; padding: 10px 6px; }
+  .rank-pos-num { font-size: 1.2rem; }
+  .rank-pos-label { font-size: .5rem; }
+  .rank-card    { padding: 10px 8px 10px 6px; gap: 8px; }
+  .rank-item-text { font-size: .82rem; }
+  .rank-arrows  { gap: 2px; }
+  .rank-arrow-btn { width: 22px; height: 22px; }
+  .rank-instructions { font-size: .75rem; }
+}
+
+/* ── Badge de confirmação na barra de navegação ── */
+.rank-confirm-badge {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: .04em;
+  text-align: center;
+  padding: 4px 10px;
+  border-radius: 99px;
+  transition: color .3s, background .3s;
+}
+.rank-confirm-badge--done {
+  color: var(--s);
+  background: rgba(46,204,113,.08);
+}

@@ -37,58 +37,83 @@ function showResults(r, targetScreen) {
   var isPublic = targetScreen === 'screen-public';
   var prefix   = isPublic ? 'pub' : 'res';
 
+  /* ── Leitura do resultado — suporta multi-perfil v9 ── */
   var pk           = r.primaryKey;
-  var sk           = r.secondaryKey;
-  var hasSecondary = r.hasSecondary;
-  var pcts         = r.pcts;
+  var profileCodes = r.profileCodes || [pk];   /* ['S','C'] ou ['D'] etc. */
+  var profileCode  = r.profileCode  || pk;     /* 'SC', 'DIS', 'D' etc.  */
+  var hasSecondary = r.hasSecondary || false;
+  var pcts         = r.pcts   || {};
+  var scores       = r.scores || {};
 
   var data  = profileData[pk];
-  var combo = hasSecondary ? combos[pk + sk] : null;
+  /* Busca combo pelo código completo (ex: 'SC', 'DIS') */
+  var combo = combos[profileCode] || null;
 
-  /* Sigla combinada: "(S)" ou "(SD)" */
-  var sigla = hasSecondary ? pk + sk : pk;
+  /* Sigla entre parênteses: (S), (SC), (DIS) */
   var siglaSpan = function(color) {
-    return '<span style="font-size:.55em;font-weight:700;color:' + color + ';opacity:.75;' +
-           'letter-spacing:.04em;vertical-align:middle;margin-left:6px;">(' + sigla + ')</span>';
+    return '<span style="font-size:.5em;font-weight:700;color:' + color + ';opacity:.7;' +
+           'letter-spacing:.04em;vertical-align:middle;margin-left:7px;">(' + profileCode + ')</span>';
   };
 
-  /* Nome principal */
+  /* ── Nome principal com todos os fatores coloridos ── */
   var nameEl = document.getElementById(prefix + '-name');
   if (combo) {
+    /* Nome colorido do fator principal + sigla + nome do combo abaixo */
     nameEl.innerHTML =
-      '<span style="color:' + DISC_COLORS[pk] + '">' + data.name + siglaSpan(DISC_COLORS[pk]) + '</span>' +
-      '<span style="font-size:.45em;font-weight:500;color:var(--text2);display:block;margin-top:4px;letter-spacing:.02em;">' +
+      '<span style="color:' + DISC_COLORS[pk] + '">' +
+        data.name + siglaSpan(DISC_COLORS[pk]) +
+      '</span>' +
+      '<span style="font-size:.44em;font-weight:500;color:var(--text2);' +
+        'display:block;margin-top:5px;letter-spacing:.02em;">' +
         combo.name +
       '</span>';
   } else {
+    /* Perfil simples */
     nameEl.innerHTML =
-      '<span style="color:' + DISC_COLORS[pk] + '">Perfil ' + data.name + siglaSpan(DISC_COLORS[pk]) + '</span>';
+      '<span style="color:' + DISC_COLORS[pk] + '">Perfil ' + data.name +
+        siglaSpan(DISC_COLORS[pk]) +
+      '</span>';
   }
 
   document.getElementById(prefix + '-tagline').textContent =
     combo ? combo.tagline : data.tagline;
 
-  /* Badge do perfil secundário */
+  /* ── Badge de perfis adicionais (2º, 3º fatores) ── */
   var secBadge = document.getElementById(prefix + '-sec-badge');
-  if (hasSecondary) {
+  if (profileCodes.length >= 2) {
     secBadge.classList.remove('hidden');
-    var sn       = document.getElementById(prefix + '-sec-name');
-    var skSigla  = '<span style="font-size:.9em;font-weight:700;color:' + DISC_COLORS[sk] + ';opacity:.75;margin-left:5px;">(' + sk + ')</span>';
-    sn.innerHTML  = 'Perfil ' + profileData[sk].name + skSigla;
-    sn.style.color = DISC_COLORS[sk];
+    var sn = document.getElementById(prefix + '-sec-name');
+    /* Exibe todos os fatores >= threshold com suas cores */
+    var extraNames = profileCodes.slice(1).map(function(code) {
+      return '<span style="color:' + DISC_COLORS[code] + ';font-weight:700;margin:0 3px;">' +
+        profileData[code].name + ' (' + code + ')' +
+      '</span>';
+    });
+    sn.innerHTML  = extraNames.join('<span style="color:var(--text3);margin:0 4px;">+</span>');
+    sn.style.color = '';
   } else {
     secBadge.classList.add('hidden');
   }
 
-  /* Descrição */
+  /* ── Descrição do perfil principal ── */
   var descTitle = document.getElementById(prefix + '-desc-title');
   var descBody  = document.getElementById(prefix + '-desc-body');
-  if (descTitle) descTitle.textContent = combo
-    ? data.name + ' + ' + profileData[sk].name
-    : 'Sobre o perfil ' + data.name;
-  if (descBody)  descBody.innerHTML = data.description.map(function(p) {
-    return '<p>' + p + '</p>';
-  }).join('');
+  if (descTitle) {
+    descTitle.textContent = profileCodes.length >= 2
+      ? profileCodes.map(function(c) { return profileData[c].name; }).join(' + ')
+      : 'Sobre o perfil ' + data.name;
+  }
+  if (descBody) {
+    /* Exibe descrição do fator principal + dos demais se multiperfil */
+    var descParts = profileCodes.map(function(code) {
+      return profileData[code].description.map(function(p) {
+        return '<p>' + p + '</p>';
+      }).join('');
+    });
+    descBody.innerHTML = descParts.join(
+      '<hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">'
+    );
+  }
 
   /* Cards de características */
   var lists = [
@@ -102,18 +127,20 @@ function showResults(r, targetScreen) {
     if (el) el.innerHTML = pair[1].map(function(t) { return '<li>' + t + '</li>'; }).join('');
   });
 
-  /* Barras de percentual animadas */
+  /* ── BUG 4,5 CORRIGIDO: barras mostram pontos reais (escala 80 pts = 100%)
+     A barra é proporcional ao máximo de um perfil (80 pts).
+     O label exibe "X pts" em vez de "X%" — padrão oficial 200 pts. ── */
   var barPre = prefix === 'pub' ? 'pub-bar-' : 'bar-';
   var pctPre = prefix === 'pub' ? 'pub-pct-' : 'pct-';
+  var MAX_SCORE_PER = 80; /* máximo por perfil na escala 200 pts */
 
   ['d','i','s','c'].forEach(function(k) {
     var b = document.getElementById(barPre + k);
     var p = document.getElementById(pctPre + k);
-    if (b) b.style.width    = '0%';
-    if (p) p.textContent    = '0%';
+    if (b) b.style.width  = '0%';
+    if (p) p.textContent  = '0 pts';
   });
 
-  /* Força reflow para a animação re-disparar */
   var reflow = document.getElementById(barPre + 'd');
   if (reflow) void reflow.offsetWidth;
 
@@ -122,9 +149,11 @@ function showResults(r, targetScreen) {
       var key   = k.toLowerCase();
       var barEl = document.getElementById(barPre + key);
       var pctEl = document.getElementById(pctPre + key);
-      var value = pcts[k] !== undefined ? pcts[k] : 0;
-      if (barEl) barEl.style.width  = value + '%';
-      if (pctEl) pctEl.textContent  = value + '%';
+      /* Usa scores (pts reais) para o valor; pcts para a largura visual */
+      var pts   = (scores && scores[k] !== undefined) ? scores[k] : (pcts[k] || 0);
+      var width = Math.round((pts / MAX_SCORE_PER) * 100);
+      if (barEl) barEl.style.width  = width + '%';
+      if (pctEl) pctEl.textContent  = pts + ' pts';
     });
   }, 80);
 }
@@ -184,69 +213,148 @@ function buildPdfHTML(r) {
   var name         = r.name;
   var date         = r.date;
 
-  var data      = profileData[pk];
-  var combo     = hasSecondary ? combos[pk + sk] : null;
-  var pdfSigla  = hasSecondary ? pk + sk : pk;
+  /* ── Dados do perfil — multi-perfil v9 ── */
+  var profileCodes = r.profileCodes || [pk];
+  var profileCode  = r.profileCode  || pk;
+  var data         = profileData[pk];
+  var combo        = combos[profileCode] || null;
 
-  var labelPrimary =
-    '<span style="font-family:Arial,sans-serif;font-size:30px;font-weight:700;' +
-    'color:' + DISC_COLORS[pk] + ';line-height:1.1;">' +
-      'Perfil ' + data.name +
-      '<span style="font-size:18px;font-weight:700;color:' + DISC_COLORS[pk] + ';' +
-      'opacity:.65;margin-left:8px;">(' + pdfSigla + ')</span>' +
-    '</span>';
+  /* Rótulo principal: nome do fator + sigla completa + nome do combo */
+  var label =
+    '<span style="font-family:Arial,sans-serif;font-size:28px;font-weight:700;' +
+    'color:' + DISC_COLORS[pk] + ';line-height:1.15;">' +
+      data.name +
+      '<span style="font-size:17px;font-weight:700;color:' + DISC_COLORS[pk] + ';' +
+        'opacity:.6;margin-left:9px;">(' + profileCode + ')</span>' +
+    '</span>' +
+    (combo
+      ? '<div style="font-family:Arial,sans-serif;font-size:13px;font-weight:600;' +
+          'color:#888;margin-top:5px;">' + combo.name + '</div>'
+      : '');
 
-  var labelCombo = combo
-    ? '<div style="font-family:Arial,sans-serif;font-size:13px;font-weight:600;color:#888;margin-top:4px;">' + combo.name + '</div>'
+  var tag = combo ? combo.tagline : data.tagline;
+
+  /* Bloco dos fatores adicionais (2º, 3º, 4º) */
+  var secBlock = profileCodes.length >= 2
+    ? profileCodes.slice(1).map(function(code) {
+        return '<span style="font-family:Arial,sans-serif;font-size:18px;' +
+          'color:#bbb;font-weight:300;margin:0 8px;">+</span>' +
+          '<span style="font-family:Arial,sans-serif;font-size:20px;font-weight:700;' +
+            'color:' + DISC_COLORS[code] + ';">' +
+            profileData[code].name +
+            '<span style="font-size:13px;opacity:.6;margin-left:6px;">(' + code + ')</span>' +
+          '</span>';
+      }).join('')
     : '';
 
-  var label = labelPrimary + labelCombo;
-  var tag   = combo ? combo.tagline : data.tagline;
+  /* ════════════════════════════════════════════════
+     GRÁFICO PDF — v7 CORRIGIDO
+     Baseado no modelo visual de referência:
+       - Barras nascem SOBRE o eixo horizontal (base)
+       - Crescem PARA CIMA proporcionalmente
+       - Eixo Y com linhas de grade à esquerda
+       - Labels ABAIXO do eixo: Letra → Nome → Pts
+       - Pontuação NÃO duplicada (sem valor no topo da barra)
+       - Fundo cinza claro, barras coloridas DISC
+     Escala: 0 a 80 pts (máximo por perfil na escala 200 pts)
+  ════════════════════════════════════════════════ */
 
-  var secBlock = hasSecondary
-    ? '<span style="font-family:Arial,sans-serif;font-size:20px;color:#ccc;font-weight:300;margin:0 10px;">+</span>' +
-      '<span style="font-family:Arial,sans-serif;font-size:26px;font-weight:700;color:' + DISC_COLORS[sk] + ';">' +
-        'Perfil ' + profileData[sk].name +
-        '<span style="font-size:16px;font-weight:700;opacity:.65;margin-left:7px;">(' + sk + ')</span>' +
-      '</span>'
-    : '';
+  /* ── Dimensões do gráfico (sem números mágicos) ── */
+  var PDF_MAX_SCORE  = 80;   /* pts máximos por perfil                 */
+  var CHART_H        = 180;  /* altura da área de barras em px         */
+  var CHART_BAR_W    = 110;  /* largura de cada barra                  */
+  var CHART_BAR_GAP  = 10;   /* espaço entre barras                    */
+  var CHART_LEFT_PAD = 44;   /* espaço para eixo Y (números + linha)   */
+  var CHART_RIGHT_PAD= 8;    /* margem direita                         */
+  var CHART_LABEL_H  = 56;   /* altura da área de labels abaixo do eixo*/
+  var CHART_TOTAL_W  = CHART_LEFT_PAD + 4 * CHART_BAR_W + 3 * CHART_BAR_GAP + CHART_RIGHT_PAD;
+  var CHART_TOTAL_H  = CHART_H + CHART_LABEL_H + 4; /* +4 = espessura do eixo */
 
-  /* Gráfico de barras HTML/tabela — sem canvas, compatível com html2canvas */
-  var MAX=20, ROW_H=9, Y_COL=36, BORDER=2, BAR_COL=173, BAR_W=110;
-  var chartRows = '';
-  for (var row = MAX; row >= 1; row--) {
-    var showLbl   = (row % 5 === 0 || row === MAX);
-    var rowBorder = (row % 5 === 0) ? 'border-top:1px solid #dde2e8;' : '';
-    var yTd = '<td style="width:' + Y_COL + 'px;text-align:right;padding-right:8px;vertical-align:middle;font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#666;height:' + ROW_H + 'px;">' + (showLbl ? row : '') + '</td>';
-    var bTd = '<td style="width:' + BORDER + 'px;background:#333;padding:0;"></td>';
-    var bars = '';
-    ['D','I','S','C'].forEach(function(k) {
-      var filled = scores[k] >= row;
-      var isTop  = scores[k] === row;
-      bars += '<td style="width:' + BAR_COL + 'px;height:' + ROW_H + 'px;text-align:center;vertical-align:middle;padding:0;background:' + (filled ? DISC_COLORS[k] : '#f5f5f5') + ';">' +
-              '<div style="width:' + BAR_W + 'px;height:' + (ROW_H+1) + 'px;margin:0 auto;background:' + (filled ? DISC_COLORS[k] : '#f5f5f5') + ';' +
-              (isTop ? 'border-radius:4px 4px 0 0;' : '') + 'display:block;line-height:0;font-size:0;"></div></td>';
-    });
-    chartRows += '<tr style="' + rowBorder + '">' + yTd + bTd + bars + '</tr>';
-  }
+  /* ── Linhas de grade horizontais (eixo Y) ── */
+  var yTicks = [0, 20, 40, 60, 80];
+  var gridHTML = yTicks.map(function(val) {
+    /* bottom relativo à área de barras */
+    var bottomPx = Math.round((val / PDF_MAX_SCORE) * CHART_H);
+    var isBase   = val === 0;
+    return (
+      /* Número do eixo Y */
+      '<div style="position:absolute;' +
+        'left:0;width:' + (CHART_LEFT_PAD - 4) + 'px;' +
+        'bottom:' + bottomPx + 'px;' +
+        'text-align:right;' +
+        'font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#777;' +
+        'line-height:1;transform:translateY(50%);">' + val + '</div>' +
+      /* Linha horizontal */
+      '<div style="position:absolute;' +
+        'left:' + CHART_LEFT_PAD + 'px;right:' + CHART_RIGHT_PAD + 'px;' +
+        'bottom:' + bottomPx + 'px;height:' + (isBase ? '2' : '1') + 'px;' +
+        'background:' + (isBase ? '#222' : '#dde2e8') + ';"></div>'
+    );
+  }).join('');
 
-  var zeroRow =
-    '<tr><td style="width:' + Y_COL + 'px;text-align:right;padding-right:8px;font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#666;height:' + ROW_H + 'px;">0</td>' +
-    '<td style="width:' + BORDER + 'px;background:#333;padding:0;"></td>' +
-    ['D','I','S','C'].map(function() {
-      return '<td style="width:' + BAR_COL + 'px;height:' + ROW_H + 'px;background:#f5f5f5;border-top:2px solid #333;"></td>';
-    }).join('') + '</tr>';
+  /* ── Barras coloridas ── */
+  var barsHTML = ['D','I','S','C'].map(function(k, ki) {
+    var pts   = scores[k] || 0;
+    /* Altura proporcional: height = (pts / 80) * CHART_H */
+    var barH  = Math.round((pts / PDF_MAX_SCORE) * CHART_H);
+    /* Posição horizontal da barra */
+    var leftPx = CHART_LEFT_PAD + ki * (CHART_BAR_W + CHART_BAR_GAP);
 
-  var xRow =
-    '<tr><td style="width:' + Y_COL + 'px;"></td>' +
-    '<td style="width:' + BORDER + 'px;background:#333;padding:0;"></td>' +
-    ['D','I','S','C'].map(function(k) {
-      return '<td style="width:' + BAR_COL + 'px;padding:8px 4px 2px;text-align:center;background:#fff;">' +
-        '<div style="font-family:Arial,sans-serif;font-size:15px;font-weight:700;color:' + DISC_COLORS[k] + ';">' + k + '</div>' +
-        '<div style="font-family:Arial,sans-serif;font-size:9px;color:#666;margin-top:2px;">' + DISC_NAMES[k] + '</div>' +
-        '<div style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:' + DISC_DARK[k] + ';margin-top:2px;">' + scores[k] + ' pts</div>' +
-        '</td>';
-    }).join('') + '</tr>';
+    return (
+      /* Fundo cinza (coluna vazia) — nasce da base (bottom:0) até o topo */
+      '<div style="position:absolute;' +
+        'left:' + leftPx + 'px;width:' + CHART_BAR_W + 'px;' +
+        'bottom:0;height:' + CHART_H + 'px;' +
+        'background:#f0f0f0;border-radius:3px 3px 0 0;"></div>' +
+
+      /* Barra colorida — começa na base (bottom:0) e sobe barH px */
+      '<div style="position:absolute;' +
+        'left:' + leftPx + 'px;width:' + CHART_BAR_W + 'px;' +
+        'bottom:0;height:' + barH + 'px;' +
+        'background:' + DISC_COLORS[k] + ';' +
+        'border-radius:' + (barH > 6 ? '3px 3px 0 0' : '1px 1px 0 0') + ';"></div>'
+    );
+  }).join('');
+
+  /* ── Labels abaixo do eixo (letra, nome, pts) ── */
+  var labelsHTML = ['D','I','S','C'].map(function(k, ki) {
+    var pts    = scores[k] || 0;
+    var leftPx = CHART_LEFT_PAD + ki * (CHART_BAR_W + CHART_BAR_GAP);
+    return (
+      '<div style="position:absolute;' +
+        'left:' + leftPx + 'px;width:' + CHART_BAR_W + 'px;' +
+        'top:' + (CHART_H + 6) + 'px;' +
+        'text-align:center;">' +
+        /* Letra DISC em cor */
+        '<div style="font-family:Arial,sans-serif;font-size:15px;font-weight:800;' +
+          'color:' + DISC_COLORS[k] + ';line-height:1.2;">' + k + '</div>' +
+        /* Nome por extenso */
+        '<div style="font-family:Arial,sans-serif;font-size:8px;' +
+          'color:#666;margin-top:1px;line-height:1.3;">' + DISC_NAMES[k] + '</div>' +
+        /* Pontuação — única aparição, clara e destacada */
+        '<div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;' +
+          'color:' + DISC_DARK[k] + ';margin-top:3px;">' + pts + ' pts</div>' +
+      '</div>'
+    );
+  }).join('');
+
+  /* ── Container principal (position:relative) ── */
+  var chartHTML =
+    '<div style="position:relative;' +
+      'width:' + CHART_TOTAL_W + 'px;' +
+      'height:' + CHART_TOTAL_H + 'px;' +
+      'margin:0 auto;">' +
+      /* Área das barras (position:relative para os filhos absolute) */
+      '<div style="position:absolute;' +
+        'left:0;right:0;top:0;height:' + CHART_H + 'px;">' +
+        gridHTML + barsHTML +
+      '</div>' +
+      /* Área dos labels (abaixo do eixo) */
+      '<div style="position:absolute;' +
+        'left:0;right:0;top:0;height:' + CHART_TOTAL_H + 'px;pointer-events:none;">' +
+        labelsHTML +
+      '</div>' +
+    '</div>';
 
   var li = function(items) {
     return items.map(function(t) {
@@ -301,7 +409,7 @@ function buildPdfHTML(r) {
       '</div>' +
       '<div style="margin-bottom:22px;">' +
         secTitle('Distribuição de Pontuação — Eixos DISC') +
-        '<table style="border-collapse:collapse;background:#fff;">' + chartRows + zeroRow + xRow + '</table>' +
+        chartHTML +
       '</div>' +
       '<div style="margin-bottom:18px;">' +
         secTitle('Análise do Perfil') +

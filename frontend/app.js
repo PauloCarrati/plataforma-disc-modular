@@ -1,74 +1,152 @@
 /* ══════════════════════════════════════════════════════
-   app.js — DISC Platform
+   app.js — DISC Platform v5
    ─────────────────────────────────────────────────────
    RESPONSABILIDADE: lógica de aplicação central.
-     • Quiz (renderQ, selectOpt, nextQ, prevQ)
-     • Identificação (phoneMask, validateIdentForm, startQuiz)
-     • Cálculo do resultado (computeResults)
+     • Quiz com sistema de ranking (drag-and-drop)
+     • Identificação do participante
+     • Cálculo do resultado DISC (computeResults)
      • Modo de avaliação externa (checkExternalMode)
      • Inicialização do sistema (init)
 
-   DEPENDE DE (deve ser carregado DEPOIS):
-     disc-engine.js → questions (banco de questões)
+   DEPENDE DE (carregado antes):
+     disc-engine.js → questions, RANK_WEIGHTS (via quiz-engine)
      globals.js     → MockDB, CentralDB, currentSession,
-                       currentParticipant, currentQ, answers,
+                       currentParticipant, currentQ,
                        lastResult, showScreen, ALL_SCREENS
+     quiz-engine.js → QuizEngine, rankAnswers,
+                       RANK_WEIGHTS, TOTAL_QUESTIONS
 
-   EXPÕE (chamadas do HTML via onclick / oninput):
-     renderQ(), selectOpt(oi), nextQ(), prevQ()
-     phoneMask(el), validateIdentForm(), startQuiz(event)
-     computeResults(), checkExternalMode()
+   EXPÕE:
+     renderQ()
+     nextQ(), prevQ()
+     phoneMask(), validateIdentForm(), startQuiz()
+     computeResults()
+     checkExternalMode()
 
-   ⚠  SEM 'use strict' — globals.js já garante o escopo.
+   ⚠  SEM 'use strict' — necessário para acessar globais.
 ══════════════════════════════════════════════════════ */
 
 /* ════════════════════════════════════════════════════
-   QUIZ — renderização e navegação por questão
+   QUIZ — renderização com sistema de ranking
 ════════════════════════════════════════════════════ */
+
+/**
+ * renderQ — renderiza a questão atual com o sistema de ranking.
+ * Preserva o ranking já salvo se o participante voltou à questão.
+ */
 function renderQ() {
   var q   = questions[currentQ];
   var idx = currentQ;
 
+  /* ── Atualiza cabeçalho ── */
   document.getElementById('q-cur').textContent     = idx + 1;
-  document.getElementById('q-num-lbl').textContent = 'QUESTÃO ' + String(idx + 1).padStart(2, '0') + ' / 20';
+  document.getElementById('q-num-lbl').textContent =
+    'QUESTÃO ' + String(idx + 1).padStart(2, '0') + ' / ' + TOTAL_QUESTIONS;
   document.getElementById('q-text').textContent    = q.text;
-  document.getElementById('prog-fill').style.width = Math.max(5, (idx / 20) * 100) + '%';
 
+  /* ── Barra de progresso ── */
+  var pct = Math.max(5, (idx / TOTAL_QUESTIONS) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+
+  /* ── Mini-mapa de pontos ── */
+  _updateDots(idx);
+
+  /* ── Container das opções ── */
   var optsEl = document.getElementById('q-opts');
   optsEl.innerHTML = '';
-  q.options.forEach(function(opt, oi) {
-    var div       = document.createElement('div');
-    div.className = 'q-opt' + (answers[idx] === oi ? ' sel' : '');
-    div.innerHTML = '<div class="opt-ltr">' + opt.label + '</div>' +
-                    '<div class="opt-txt">' + opt.text  + '</div>';
-    div.onclick   = (function(i) { return function() { selectOpt(i); }; })(oi);
-    optsEl.appendChild(div);
+
+  /* Inicializa o QuizEngine para esta questão.
+     Se já foi respondida, restaura o ranking salvo. */
+  var savedRank = QuizEngine.getRank(idx);
+  QuizEngine.init(optsEl, q, idx, savedRank, function(ranking) {
+    /* Chamado sempre que o participante muda a ordem */
+    _onRankChange(idx, ranking);
   });
 
+  /* ── Navegação ── */
   document.getElementById('btn-back').disabled    = (idx === 0);
-  document.getElementById('btn-next').disabled    = (answers[idx] === null);
-  document.getElementById('btn-next').textContent = (idx === 19) ? 'Finalizar ✓' : 'Próxima →';
+  var isLast = idx === TOTAL_QUESTIONS - 1;
+  var nextBtn = document.getElementById('btn-next');
+  nextBtn.textContent = isLast ? 'Ver Resultado ✓' : 'Próxima →';
+  /* Sempre habilitado — a ordem aleatória inicial já é uma resposta válida */
+  nextBtn.disabled    = false;
+
+  /* ── Indicador de confirmação de ordem ── */
+  _updateConfirmBadge(idx);
 }
 
-function selectOpt(oi) {
-  answers[currentQ] = oi;
-  document.querySelectorAll('.q-opt').forEach(function(el, i) {
-    el.classList.toggle('sel', i === oi);
-  });
-  document.getElementById('btn-next').disabled = false;
+/**
+ * _onRankChange — callback chamado pelo QuizEngine após cada reordenação.
+ * Atualiza o badge de confirmação e habilita navegação.
+ */
+function _onRankChange(qIdx, ranking) {
+  /* Marca a questão como "interagida" para distinção futura */
+  if (!window._rankInteracted) window._rankInteracted = {};
+  window._rankInteracted[qIdx] = true;
+
+  _updateConfirmBadge(qIdx);
+  _updateDots(currentQ);
+
+  /* Habilita o botão caso estivesse desabilitado */
+  var nextBtn = document.getElementById('btn-next');
+  if (nextBtn) nextBtn.disabled = false;
 }
 
+/**
+ * _updateConfirmBadge — exibe "✓ Ordem confirmada" na barra de navegação
+ * quando o participante interagiu com o ranking desta questão.
+ */
+function _updateConfirmBadge(qIdx) {
+  var badge = document.getElementById('rank-confirm-badge');
+  if (!badge) return;
+  var interacted = window._rankInteracted && window._rankInteracted[qIdx];
+  badge.textContent = interacted ? '✓ Ordem registrada' : 'Arraste para ordenar';
+  badge.className   = interacted
+    ? 'rank-confirm-badge rank-confirm-badge--done'
+    : 'rank-confirm-badge';
+}
+
+/**
+ * _updateDots — atualiza o mini-mapa de progresso na barra superior.
+ */
+function _updateDots(currentIdx) {
+  var container = document.getElementById('quiz-dots');
+  if (!container) return;
+
+  container.innerHTML = '';
+  for (var i = 0; i < TOTAL_QUESTIONS; i++) {
+    var dot = document.createElement('div');
+    dot.className = 'quiz-dot';
+    var interacted = window._rankInteracted && window._rankInteracted[i];
+    if (i < currentIdx || interacted) dot.classList.add('dot-done');
+    if (i === currentIdx)             dot.classList.add('dot-current');
+    container.appendChild(dot);
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   NAVEGAÇÃO ENTRE QUESTÕES
+════════════════════════════════════════════════════ */
 function nextQ() {
-  if (answers[currentQ] === null) return;
-  if (currentQ === 19) { computeResults(); return; }
+  /* A questão sempre tem um ranking (gerado pelo init),
+     então nunca bloqueia a navegação. */
+  if (currentQ === TOTAL_QUESTIONS - 1) {
+    computeResults();
+    return;
+  }
   currentQ++;
   renderQ();
+  /* Scroll suave ao topo do card */
+  var card = document.getElementById('q-card');
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function prevQ() {
   if (currentQ === 0) return;
   currentQ--;
   renderQ();
+  var card = document.getElementById('q-card');
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* ════════════════════════════════════════════════════
@@ -116,23 +194,45 @@ function startQuiz(event) {
   };
   sessionStorage.setItem('disc_current_participant', JSON.stringify(currentParticipant));
 
-  answers  = new Array(20).fill(null);
+  /* Reseta o estado do quiz */
+  QuizEngine.reset();
+  window._rankInteracted = {};
   currentQ = 0;
+
   showScreen('screen-quiz');
   renderQ();
 }
 
 /* ════════════════════════════════════════════════════
-   CÁLCULO DO RESULTADO DISC
-   Conta respostas por perfil → determina principal e
-   secundário (regra: diferença ≤ 3 pontos) → salva
-   via MockDB.addParticipant (que delega ao CentralDB).
+   CÁLCULO DO RESULTADO DISC — Sistema de Pesos
+   ─────────────────────────────────────────────────
+   Para cada questão, cada posição recebe um peso:
+     Posição 0 (mais parecido) → peso 4
+     Posição 1                 → peso 3
+     Posição 2                 → peso 2
+     Posição 3 (menos parecido)→ peso 1
+
+   A pontuação bruta de cada perfil (D, I, S, C)
+   é a soma dos pesos de todas as opções daquele
+   perfil em todas as questões.
+
+   Pontuação máxima possível por perfil:
+     20 questões × peso máximo 4 = 80 pontos
+   Pontuação mínima:
+     20 questões × peso mínimo 1 = 20 pontos
+
+   ── PREPARADO PARA MOTOR MATEMÁTICO FUTURO ──────
+   O motor atual usa apenas a soma ponderada simples.
+   Para implementar normalização, ipsatização ou
+   pesos diferenciados por questão, basta substituir
+   a lógica dentro deste bloco sem mudar a estrutura
+   do rankAnswers[].
 ════════════════════════════════════════════════════ */
 function computeResults() {
   showScreen('screen-loading');
   setTimeout(function() {
 
-    /* Recupera dados do participante (fallback para sessionStorage) */
+    /* Recupera dados do participante */
     if (!currentParticipant) {
       var saved = sessionStorage.getItem('disc_current_participant');
       currentParticipant = saved
@@ -140,30 +240,64 @@ function computeResults() {
         : { name: 'Participante', phone: '', email: '' };
     }
 
-    /* account_id: gestor logado OU conta do link externo */
     var accountId = currentSession
       ? currentSession.id
       : (sessionStorage.getItem('disc_ext_acc') || 'ACC_DEMO_001');
 
-    /* Contagem de respostas por perfil */
-    var scores = { D:0, I:0, S:0, C:0 };
-    answers.forEach(function(ai, qi) {
-      if (ai !== null) scores[questions[qi].options[ai].disc]++;
-    });
+    /* ════════════════════════════════════════════════
+       MOTOR DE PONTUAÇÃO DISC — Escala 200 pts
+       ────────────────────────────────────────────
+       Pesos por posição: 1º=4, 2º=3, 3º=2, 4º=1
+       20 questões × (4+3+2+1) = 20 × 10 = 200 pts totais
+       Soma D+I+S+C é sempre exatamente 200 pts.
+       Cada perfil: mín=20 pts, máx=80 pts.
 
-    var total = 20;
-    var pcts  = {
-      D: Math.round((scores.D / total) * 100),
-      I: Math.round((scores.I / total) * 100),
-      S: Math.round((scores.S / total) * 100),
-      C: Math.round((scores.C / total) * 100)
+       BUG 3,4,5 CORRIGIDOS:
+       - scores contém pontos reais (não percentual)
+       - MAX_SCORE_TOTAL = 200 (soma de todos os perfis)
+       - MAX_SCORE_PER   = 80  (máximo de um perfil)
+       - pcts removido — toda a plataforma usa 'pts'
+       - SEC_THRESHOLD ajustado para escala 80 pts
+    ════════════════════════════════════════════════ */
+
+    /* Pontuação máxima por perfil: 20q × peso_máximo(4) = 80 */
+    var MAX_SCORE_PER   = TOTAL_QUESTIONS * RANK_WEIGHTS[0]; /* 80  */
+    /* Soma total garantida: 20q × soma_pesos(10) = 200 */
+    var MAX_SCORE_TOTAL = TOTAL_QUESTIONS *
+      RANK_WEIGHTS.reduce(function(a, b) { return a + b; }, 0); /* 200 */
+
+    /* Lê window.rankAnswers para garantir dados persistidos reais */
+    var rankData = window.rankAnswers;
+
+    /* ── Pontuação ponderada ── */
+    var scores = { D: 0, I: 0, S: 0, C: 0 };
+    for (var qi = 0; qi < TOTAL_QUESTIONS; qi++) {
+      var rank = rankData[qi];
+      if (!rank) continue;
+      rank.forEach(function(opt, pos) {
+        scores[opt.disc] += RANK_WEIGHTS[pos];
+      });
+    }
+
+    /* ════════════════════════════════════════════════
+       IDENTIFICAÇÃO DO PERFIL — Regra Oficial v9
+       ────────────────────────────────────────────
+       buildProfileResult() (disc-engine.js):
+         • Ordena D/I/S/C do maior ao menor
+         • Seleciona todos com score >= 51 pts
+         • Se nenhum >= 51, usa apenas o maior
+         • Retorna profileCode, profileCodes[], combo
+       Elimina SEC_THRESHOLD anterior (diferença de %).
+    ════════════════════════════════════════════════ */
+    var profile = buildProfileResult(scores);
+
+    /* pcts: barras visuais 0–100% (baseado em max 80 pts/perfil) */
+    var pcts = {
+      D: Math.round((scores.D / MAX_SCORE_PER) * 100),
+      I: Math.round((scores.I / MAX_SCORE_PER) * 100),
+      S: Math.round((scores.S / MAX_SCORE_PER) * 100),
+      C: Math.round((scores.C / MAX_SCORE_PER) * 100)
     };
-
-    /* Perfil principal e secundário */
-    var sorted = Object.entries(scores).sort(function(a, b) { return b[1] - a[1]; });
-    var pk     = sorted[0][0];
-    var sk     = sorted[1][0];
-    var hasSec = (sorted[0][1] - sorted[1][1]) <= 3 && sorted[0][1] > 0;
 
     var shareId = 'share_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 
@@ -173,14 +307,41 @@ function computeResults() {
       name:         currentParticipant.name,
       phone:        currentParticipant.phone,
       email:        currentParticipant.email,
-      primaryKey:   pk,
-      secondaryKey: sk,
-      hasSecondary: hasSec,
-      scores:       scores,
-      pcts:         pcts,
-      date:         new Date().toLocaleDateString('pt-BR'),
-      shareId:      shareId,
-      origem:       currentSession ? 'painel' : 'link_externo'
+
+      /* ── Campos de perfil — nova estrutura v9 ── */
+      profileCode:  profile.profileCode,   /* ex: 'SC', 'DIS', 'D' */
+      profileCodes: profile.profileCodes,  /* ex: ['S','C']         */
+      primaryKey:   profile.primaryKey,    /* ex: 'S'               */
+      secondaryKey: profile.secondaryKey,  /* ex: 'C' ou null       */
+      hasSecondary: profile.hasSecondary,  /* true se >= 2 fatores  */
+
+      scores:  scores,
+      pcts:    pcts,
+      date:    new Date().toLocaleDateString('pt-BR'),
+      shareId: shareId,
+      origem:  currentSession ? 'painel' : 'link_externo',
+
+      /* ── Metadados do motor (debug + backend futuro) ── */
+      _engine: {
+        version:        'v9-profile-threshold-51',
+        maxScorePer:    MAX_SCORE_PER,
+        maxScoreTotal:  MAX_SCORE_TOTAL,
+        threshold:      PROFILE_THRESHOLD,
+        aboveThreshold: profile.aboveThreshold,
+        rankSnapshot:   window.rankAnswers.slice()
+
+        /* ── PONTO DE INTEGRAÇÃO FUTURA ─────────────
+           fetch('/api/quiz/submit', {
+             method: 'POST',
+             body: JSON.stringify({
+               participantId: result.id,
+               profileCode: profile.profileCode,
+               scores: scores,
+               rankings: rankAnswers
+             })
+           });
+        ─────────────────────────────────────────────── */
+      }
     };
 
     MockDB.addParticipant(result);
@@ -194,9 +355,7 @@ function computeResults() {
 }
 
 /* ════════════════════════════════════════════════════
-   MODO AVALIAÇÃO EXTERNA
-   Detecta ?modo=avaliacao&acc=ID na URL.
-   Se presente: pula login e abre tela de identificação.
+   MODO AVALIAÇÃO EXTERNA (?modo=avaliacao)
 ════════════════════════════════════════════════════ */
 function checkExternalMode() {
   var params = new URLSearchParams(window.location.search);
@@ -224,38 +383,25 @@ function checkExternalMode() {
 }
 
 /* ════════════════════════════════════════════════════
-   INICIALIZAÇÃO — ponto de entrada do sistema
-   Executada automaticamente quando app.js termina de
-   carregar (após disc-engine.js, globals.js).
-
-   Prioridade de roteamento:
-     0. Inicializa CentralDB (localStorage → memória)
-     1. ?share=ID        → resultado público
-     2. ?modo=avaliacao  → avaliação via link externo
-     3. Sessão ativa     → painel do gestor
-     4. Padrão           → tela de login
+   INICIALIZAÇÃO
+   Ordem de prioridade:
+     0. CentralDB.init() — carrega localStorage → memória
+     1. checkDevMode()   — exibe atalhos se ?dev=1
+     2. checkPublicShare() — resultado público ?share=
+     3. checkExternalMode() — avaliação via link ?modo=
+     4. Sessão ativa    — painel do gestor
+     5. Padrão          — tela de login
 ════════════════════════════════════════════════════ */
 (function init() {
-  /* 0. Funde localStorage no store global em memória */
   CentralDB.init();
-
-  /* 1. Modo de desenvolvimento (?dev=1) — exibe atalhos ocultos no login */
   checkDevMode();
-
-  /* 2. Link de resultado público */
-  if (checkPublicShare()) return;
-
-  /* 2. Modo avaliação externa */
-  if (checkExternalMode()) return;
-
-  /* 3. Sessão de gestor ativa */
+  if (checkPublicShare())    return;
+  if (checkExternalMode())   return;
   var session = MockDB.getSession();
   if (session) {
     currentSession = session;
     openAdmin();
     return;
   }
-
-  /* 4. Tela de login */
   showScreen('screen-auth');
 })();

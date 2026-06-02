@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "phase": "FASE 0 — estrutural (dados de exemplo para validação)",
+    "totalProfiles": 3,
+    "schema": {
+      "code":              "string  — sigla do perfil (ex: D, SC, DIS)",
+      "title":             "string  — nome completo do perfil",
+      "shortDescription":  "string  — descrição resumida (1-2 frases)",
+      "characteristics":   "array   — traços comportamentais centrais",
+      "strengths":         "array   — pontos fortes do perfil",
+      "relationships":     "array   — como se relaciona com os outros",
+      "decisionMaking":    "array   — estilo de tomada de decisão",
+      "motivators":        "array   — o que impulsiona e engaja este perfil",
+      "fears":             "array   — o que mais incomoda ou amedronta",
+      "developmentPoints": "array   — áreas de desenvolvimento recomendadas",
+      "underPressure":     "array   — comportamentos em situações de pressão"
+    },
+    "notes": [
+      "Nesta fase os arrays estão vazios intencionalmente.",
+      "O preenchimento completo de cada perfil ocorrerá nas fases seguintes.",
+      "Suporta perfis simples (D, I, S, C), duplos (DI, SC…) e triplos (DIS, DSC…).",
+      "A chave de cada perfil é idêntica ao campo 'code' para facilitar lookup direto."
+    ]
+  },
+
+  "D": {
+    "code": "D",
+    "title": "Dominante",
+    "shortDescription": "Perfil orientado a resultados, direto e assertivo. Age com rapidez e determinação para atingir objetivos.",
+    "characteristics":   [],
+    "strengths":         [],
+    "relationships":     [],
+    "decisionMaking":    [],
+    "motivators":        [],
+    "fears":             [],
+    "developmentPoints": [],
+    "underPressure":     []
+  },
+
+  "SC": {
+    "code": "SC",
+    "title": "Estável Conforme",
+    "shortDescription": "Perfil que combina consistência e precisão. Une lealdade e cuidado com a qualidade dos processos.",
+    "characteristics":   [],
+    "strengths":         [],
+    "relationships":     [],
+    "decisionMaking":    [],
+    "motivators":        [],
+    "fears":             [],
+    "developmentPoints": [],
+    "underPressure":     []
+  },
+
+  "DIS": {
+    "code": "DIS",
+    "title": "Dominante Influente Estável",
+    "shortDescription": "Perfil multidimensional que combina liderança, persuasão e consistência. Age com energia e mantém o time engajado.",
+    "characteristics":   [],
+    "strengths":         [],
+    "relationships":     [],
+    "decisionMaking":    [],
+    "motivators":        [],
+    "fears":             [],
+    "developmentPoints": [],
+    "underPressure":     []
+  }
+}

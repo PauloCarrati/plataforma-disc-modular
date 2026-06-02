@@ -93,26 +93,47 @@ function showAuthMsg(id, type, msg) {
 /* ════════════════════════════════════════════════════
    LOGIN
 ════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   LOGIN — detecção automática telefone / e-mail
+   Se o input contém "@" → busca por e-mail.
+   Caso contrário         → busca por telefone.
+   Super-Admin sempre por e-mail (contém "@").
+════════════════════════════════════════════════ */
 function doLogin() {
-  var email = document.getElementById('login-email').value.trim();
+  var input = document.getElementById('login-email').value.trim();
   var pass  = document.getElementById('login-pass').value;
 
-  if (!email || !pass) {
-    showAuthMsg('login-msg', 'error', 'Preencha e-mail e senha.');
+  if (!input || !pass) {
+    showAuthMsg('login-msg', 'error', 'Preencha telefone (ou e-mail) e senha.');
     return;
   }
 
   /* Super-Admin — verificação prioritária */
-  if (email === SUPER_ADMIN.email && pass === SUPER_ADMIN.pass) {
+  if (input === SUPER_ADMIN.email && pass === SUPER_ADMIN.pass) {
     MockDB.setSession(SUPER_ADMIN);
     currentSession = SUPER_ADMIN;
     openAdmin();
     return;
   }
 
-  var account = MockDB.findAccount(email, pass);
+  /* Detecção automática: "@" → e-mail, caso contrário → telefone */
+  var isByEmail = input.indexOf('@') !== -1;
+  var account   = null;
+
+  if (isByEmail) {
+    account = MockDB.findAccount(input, pass);
+  } else {
+    /* Normaliza: remove tudo que não é dígito para comparar */
+    var phoneDigits = input.replace(/\D/g, '');
+    account = MockDB.findAccountByPhone(phoneDigits, pass);
+  }
+
   if (!account) {
-    showAuthMsg('login-msg', 'error', 'E-mail ou senha incorretos.');
+    showAuthMsg('login-msg', 'error',
+      isByEmail
+        ? 'E-mail ou senha incorretos.'
+        : 'Telefone ou senha incorretos.'
+    );
     return;
   }
   MockDB.setSession(account);
@@ -120,17 +141,53 @@ function doLogin() {
   openAdmin();
 }
 
+/* Máscara progressiva para o campo de login:
+   se começa a digitar números → aplica máscara de telefone.
+   Se digita "@" → remove máscara (modo e-mail). */
+function loginInputMask(el) {
+  var val = el.value;
+  /* Se contém "@" ou letras não-dígitos iniciais → modo e-mail, sem máscara */
+  if (val.indexOf('@') !== -1 || /^[a-zA-Z]/.test(val)) return;
+  /* Modo telefone — aplica máscara */
+  var digits = val.replace(/\D/g, '');
+  if (digits.length === 0) { el.value = ''; return; }
+  if (digits.length <= 2)        el.value = '(' + digits;
+  else if (digits.length <= 7)   el.value = '(' + digits.slice(0,2) + ') ' + digits.slice(2);
+  else if (digits.length <= 11)  el.value = '(' + digits.slice(0,2) + ') ' + digits.slice(2,7) + '-' + digits.slice(7);
+  else { digits = digits.slice(0,11); el.value = '(' + digits.slice(0,2) + ') ' + digits.slice(2,7) + '-' + digits.slice(7); }
+}
+
 /* ════════════════════════════════════════════════════
    CADASTRO
 ════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   CADASTRO v7
+   Campos:
+   - Nome de usuário  (obrigatório)
+   - Telefone         (obrigatório, com máscara)
+   - E-mail           (opcional)
+   - Senha            (obrigatório, min 6)
+   - Confirmar senha  (obrigatório)
+════════════════════════════════════════════════ */
 function doRegister() {
-  var name  = document.getElementById('reg-name').value.trim();
-  var email = document.getElementById('reg-email').value.trim();
-  var pass  = document.getElementById('reg-pass').value;
-  var pass2 = document.getElementById('reg-pass2').value;
+  var name   = document.getElementById('reg-name').value.trim();
+  var phoneRaw = document.getElementById('reg-phone').value.trim();
+  var email  = document.getElementById('reg-email').value.trim();
+  var pass   = document.getElementById('reg-pass').value;
+  var pass2  = document.getElementById('reg-pass2').value;
 
-  if (!name || !email || !pass) {
-    showAuthMsg('reg-msg', 'error', 'Preencha todos os campos obrigatórios.');
+  /* Validações obrigatórias */
+  if (!name) {
+    showAuthMsg('reg-msg', 'error', 'Informe seu nome de usuário.');
+    return;
+  }
+  var phoneDigits = phoneRaw.replace(/\D/g, '');
+  if (phoneDigits.length < 10) {
+    showAuthMsg('reg-msg', 'error', 'Informe um telefone válido com DDD.');
+    return;
+  }
+  if (!pass) {
+    showAuthMsg('reg-msg', 'error', 'Informe uma senha.');
     return;
   }
   if (pass.length < 6) {
@@ -141,17 +198,26 @@ function doRegister() {
     showAuthMsg('reg-msg', 'error', 'As senhas não conferem.');
     return;
   }
-  if (MockDB.findAccountByEmail(email)) {
+
+  /* Verifica duplicata por telefone (obrigatório) */
+  if (MockDB.findAccountByPhone(phoneDigits, null)) {
+    showAuthMsg('reg-msg', 'error', 'Telefone já cadastrado. Tente fazer login.');
+    return;
+  }
+  /* Verifica duplicata por e-mail (se informado) */
+  if (email && MockDB.findAccountByEmail(email)) {
     showAuthMsg('reg-msg', 'error', 'E-mail já cadastrado. Tente fazer login.');
     return;
   }
 
   var newAcc = {
-    id:        'ACC_' + Date.now(),
-    name:      name,
-    email:     email,
-    pass:      pass,
-    createdAt: new Date().toISOString()
+    id:          'ACC_' + Date.now(),
+    name:        name,
+    phone:       phoneRaw,
+    phoneDigits: phoneDigits,
+    email:       email || '',
+    pass:        pass,
+    createdAt:   new Date().toISOString()
   };
   MockDB.addAccount(newAcc);
   showAuthMsg('reg-msg', 'success', '✓ Conta criada com sucesso! Entrando…');
@@ -162,11 +228,22 @@ function doRegister() {
   }, 900);
 }
 
+/* Máscara de telefone para o campo de cadastro */
+function phoneMaskReg(el) {
+  var v = el.value.replace(/\D/g, '');
+  if (v.length > 11) v = v.slice(0, 11);
+  if      (v.length > 6) v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+  else if (v.length > 2) v = '(' + v.slice(0,2) + ') ' + v.slice(2);
+  else if (v.length > 0) v = '(' + v;
+  el.value = v;
+}
+
 /* ════════════════════════════════════════════════════
    ATALHOS DE DESENVOLVIMENTO
    Só aparecem quando ?dev=1 está na URL.
 ════════════════════════════════════════════════════ */
 function loginDemo() {
+  /* Conta demo usa e-mail para login rápido */
   document.getElementById('login-email').value = 'demo@disc.com';
   document.getElementById('login-pass').value  = 'demo123';
   doLogin();

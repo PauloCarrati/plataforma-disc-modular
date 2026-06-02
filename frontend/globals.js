@@ -155,6 +155,17 @@ var MockDB = {
     }) || null;
   },
 
+  /* Busca conta por telefone (apenas dígitos) e opcionalmente senha.
+     pass=null → só verifica existência (para checar duplicata no cadastro). */
+  findAccountByPhone: function(phoneDigits, pass) {
+    return MockDB.getAccounts().find(function(a) {
+      var accDigits = (a.phoneDigits || (a.phone || '').replace(/\D/g, ''));
+      if (accDigits !== phoneDigits) return false;
+      if (pass === null) return true;       /* só verifica existência */
+      return a.pass === pass;
+    }) || null;
+  },
+
   /* ── Participantes — delegados ao CentralDB ── */
   getAllParticipants: function()    { return CentralDB.getAll(); },
   addParticipant:    function(p)   { CentralDB.push(p); },
@@ -183,8 +194,15 @@ var MockDB = {
 var currentSession     = null;  /* conta logada (gestor ou superadmin) */
 var currentParticipant = null;  /* dados do form de identificação      */
 var currentQ           = 0;     /* índice da questão atual no quiz     */
-var answers            = new Array(20).fill(null); /* respostas do quiz */
+/* answers legado removido — substituído por rankAnswers em quiz-engine.js */
 var lastResult         = null;  /* último resultado calculado          */
+
+/* ── Estado do ranking (v5) ──
+   rankAnswers e RANK_WEIGHTS são declarados em quiz-engine.js.
+   Declarados aqui como referência para que globals.js documente
+   todas as variáveis de estado da aplicação.
+   rankAnswers[i] = array de 4 opções na ordem definida pelo usuário.
+   Inicializado como null e preenchido pelo QuizEngine.init(). */
 var pieChart           = null;  /* instância Chart.js — gráfico pizza  */
 var barChart           = null;  /* instância Chart.js — gráfico barras */
 

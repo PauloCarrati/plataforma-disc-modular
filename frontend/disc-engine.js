@@ -180,20 +180,133 @@ var profileData = {
 /* ════════════════════════════════════════════════════
    PERFIS COMBINADOS (diferença de pontuação ≤ 3)
 ════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════
+   MAPA DE PERFIS COMBINADOS
+   Suporta perfis simples (1 fator), duplos (2),
+   triplos (3) e quádruplo (4).
+   A chave é a concatenação dos códigos em ordem
+   decrescente de pontuação (ex: "SC", "DIS", "DISC").
+════════════════════════════════════════════════════ */
 var combos = {
-  "DI": { name:"Empreendedor",        tagline:"Dinâmico, persuasivo e movido a resultados com as pessoas" },
-  "ID": { name:"Promotor",            tagline:"Inspira e conduz com energia e visão de futuro" },
-  "DS": { name:"Realizador",          tagline:"Une foco em resultados com estabilidade nas relações" },
-  "SD": { name:"Estável Decisivo",    tagline:"Ação calculada com profunda sensibilidade humana" },
-  "DC": { name:"Perfeccionista",      tagline:"Busca resultados com alto padrão de qualidade" },
-  "CD": { name:"Investigador",        tagline:"Analítico e determinado na busca por soluções" },
-  "IS": { name:"Conselheiro",         tagline:"Empático, comunicativo e genuinamente colaborativo" },
-  "SI": { name:"Apoiador Influente",  tagline:"Cria harmonia e engajamento em qualquer grupo" },
-  "IC": { name:"Motivador",           tagline:"Entusiasmo aliado à busca por qualidade" },
-  "CI": { name:"Especialista Social", tagline:"Precisão técnica com forte habilidade relacional" },
-  "SC": { name:"Especialista Estável",tagline:"Consistência e rigor como pilares do trabalho" },
-  "CS": { name:"Metódico",            tagline:"Processos, qualidade e harmonia em equilíbrio" }
+  /* ── Perfis duplos ── */
+  "DI": { name:"Empreendedor",         tagline:"Dinâmico, persuasivo e movido a resultados com as pessoas" },
+  "ID": { name:"Promotor",             tagline:"Inspira e conduz com energia e visão de futuro" },
+  "DS": { name:"Realizador",           tagline:"Une foco em resultados com estabilidade nas relações" },
+  "SD": { name:"Estável Decisivo",     tagline:"Ação calculada com profunda sensibilidade humana" },
+  "DC": { name:"Perfeccionista",       tagline:"Busca resultados com alto padrão de qualidade" },
+  "CD": { name:"Investigador",         tagline:"Analítico e determinado na busca por soluções" },
+  "IS": { name:"Conselheiro",          tagline:"Empático, comunicativo e genuinamente colaborativo" },
+  "SI": { name:"Apoiador Influente",   tagline:"Cria harmonia e engajamento em qualquer grupo" },
+  "IC": { name:"Motivador",            tagline:"Entusiasmo aliado à busca por qualidade" },
+  "CI": { name:"Especialista Social",  tagline:"Precisão técnica com forte habilidade relacional" },
+  "SC": { name:"Especialista Estável", tagline:"Consistência e rigor como pilares do trabalho" },
+  "CS": { name:"Metódico",             tagline:"Processos, qualidade e harmonia em equilíbrio" },
+
+  /* ── Perfis triplos ── */
+  "DIS": { name:"Líder Catalisador",    tagline:"Resultados, pessoas e consistência em equilíbrio" },
+  "DIC": { name:"Estrategista Humano",  tagline:"Visão, influência e rigor analítico combinados" },
+  "DSC": { name:"Gestor Completo",      tagline:"Determinação, estabilidade e precisão em harmonia" },
+  "IDS": { name:"Facilitador Ativo",    tagline:"Engaja, age e sustenta com leveza" },
+  "IDC": { name:"Comunicador Técnico",  tagline:"Persuasão com profundidade analítica" },
+  "ISC": { name:"Harmonizador",         tagline:"Conexões genuínas com consistência e qualidade" },
+  "SDI": { name:"Âncora Inspiradora",   tagline:"Estabilidade que motiva e entrega resultados" },
+  "SDC": { name:"Executor Metódico",    tagline:"Constância, determinação e padrão elevado" },
+  "SIC": { name:"Guardião Empático",    tagline:"Cuida, conecta e garante qualidade" },
+  "SCD": { name:"Especialista Decisivo",tagline:"Qualidade, consistência e foco em resultados" },
+  "CDS": { name:"Analista Realizador",  tagline:"Precisão que gera resultados sustentáveis" },
+  "CDI": { name:"Consultor Estratégico",tagline:"Dados, visão e influência a serviço do resultado" },
+  "CIS": { name:"Especialista Relacional",tagline:"Qualidade técnica com escuta e conexão genuínas" },
+  "CSI": { name:"Conselheiro Criterioso",tagline:"Rigor, harmonia e influência positiva" },
+  "CSD": { name:"Arquiteto de Soluções",tagline:"Processos sólidos com foco e estabilidade" },
+  "ICS": { name:"Inovador Cuidadoso",   tagline:"Criatividade com precisão e sensibilidade" },
+
+  /* ── Perfil quádruplo ── */
+  "DISC": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "DISC": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "DSIC": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "DCIS": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "IDSC": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "ISDC": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "ICDS": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "SDCI": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "SIDC": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "SCDI": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "CDIS": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" },
+  "CSDI": { name:"Perfil Multidimensional", tagline:"Equilíbrio excepcional entre os quatro fatores comportamentais" }
 };
+
+/* ════════════════════════════════════════════════════
+   LIMIAR OFICIAL DE PERFIL PRINCIPAL
+   Todo fator com score >= PROFILE_THRESHOLD é
+   considerado perfil principal.
+   Baseado na regra oficial: 51–100 = principal,
+   1–50 = secundário.
+════════════════════════════════════════════════════ */
+var PROFILE_THRESHOLD = 51;
+
+/* ════════════════════════════════════════════════════
+   buildProfileResult — motor de identificação de perfil
+   ─────────────────────────────────────────────────
+   Parâmetro: scores = { D: n, I: n, S: n, C: n }
+
+   Retorna:
+   {
+     profileCodes: ['S','C'],      // fatores principais ordenados
+     profileCode:  'SC',           // sigla concatenada
+     primaryKey:   'S',            // fator de maior pontuação
+     aboveThreshold: [{code,score}],// todos >= 51 pts
+     belowThreshold: [{code,score}],// todos < 51 pts
+     combo: { name, tagline }      // objeto do mapa combos
+   }
+
+   REGRA:
+   1. Ordena D/I/S/C do maior ao menor.
+   2. Seleciona todos com score >= PROFILE_THRESHOLD (51).
+   3. Se nenhum >= 51 → usa apenas o maior (perfil simples forçado).
+   4. Concatena os códigos na ordem → profileCode.
+   5. Busca em combos pelo profileCode exato.
+════════════════════════════════════════════════════ */
+function buildProfileResult(scores) {
+  /* 1. Ordena do maior ao menor */
+  var sorted = [
+    { code: 'D', score: scores.D || 0 },
+    { code: 'I', score: scores.I || 0 },
+    { code: 'S', score: scores.S || 0 },
+    { code: 'C', score: scores.C || 0 }
+  ].sort(function(a, b) { return b.score - a.score; });
+
+  /* 2. Filtra os que atingem o limiar */
+  var above = sorted.filter(function(f) { return f.score >= PROFILE_THRESHOLD; });
+  var below = sorted.filter(function(f) { return f.score < PROFILE_THRESHOLD; });
+
+  /* 3. Garante ao menos o fator de maior pontuação */
+  if (above.length === 0) above = [sorted[0]];
+
+  /* 4. Monta o código de perfil */
+  var profileCodes = above.map(function(f) { return f.code; });
+  var profileCode  = profileCodes.join('');
+  var primaryKey   = profileCodes[0];
+
+  /* 5. Busca o combo correspondente */
+  var combo = combos[profileCode] || null;
+
+  /* Logs temporários para validação durante testes */
+  console.log('[DISC] Scores:', scores);
+  console.log('[DISC] Perfil Detectado:', profileCode,
+    '| Fatores >= ' + PROFILE_THRESHOLD + ':', profileCodes,
+    '| Combo:', combo ? combo.name : '(simples)');
+
+  return {
+    profileCodes:     profileCodes,   /* ex: ['S','C'] */
+    profileCode:      profileCode,    /* ex: 'SC'      */
+    primaryKey:       primaryKey,     /* ex: 'S'       */
+    secondaryKey:     profileCodes[1] || null,
+    hasSecondary:     profileCodes.length >= 2,
+    aboveThreshold:   above,
+    belowThreshold:   below,
+    combo:            combo
+  };
+}
 
 /* ════════════════════════════════════════════════════
    CONSTANTES DE COR E NOME

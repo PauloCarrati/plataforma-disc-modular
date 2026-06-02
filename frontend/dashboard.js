@@ -142,7 +142,15 @@ function renderOverview() {
               ? '<span style="font-size:.68rem;background:rgba(52,152,219,.15);color:var(--c);border-radius:99px;padding:1px 7px;margin-left:6px;">externo</span>'
               : '') +
           '</td>' +
-          '<td><span class="disc-badge disc-' + r.primaryKey + '">' + r.primaryKey + ' — ' + profileData[r.primaryKey].name + '</span></td>' +
+          /* Badge na tabela recente — usa profileCode completo */
+          '<td>' + (function(res) {
+            var codes = res.profileCodes || [res.primaryKey];
+            var badges = codes.map(function(c) {
+              return '<span class="disc-badge disc-' + c + '">' + c + '</span>';
+            }).join('');
+            return badges + '<span style="font-size:.78rem;color:var(--text2);margin-left:5px">' +
+              (res.profileCode || res.primaryKey) + '</span>';
+          })(r) + '</td>' +
           '<td>' + r.date + '</td>' +
         '</tr>';
       }).join('')
@@ -181,9 +189,17 @@ function renderParticipants(filtered) {
       '<td>' + escHtml(r.phone) + '</td>' +
       '<td>' + (r.email ? escHtml(r.email) : '<span style="color:var(--text3)">—</span>') + '</td>' +
       '<td>' +
-        '<span class="disc-badge disc-' + r.primaryKey + '">' + r.primaryKey + '</span>' +
-        (r.hasSecondary ? '<span class="disc-badge disc-' + r.secondaryKey + '" style="margin-left:4px">' + r.secondaryKey + '</span>' : '') +
-        '<span style="font-size:.8rem;color:var(--text2);margin-left:6px">' + profileData[r.primaryKey].name + '</span>' +
+        /* Badge de perfil: mostra cada fator com sua cor DISC */
+        (function(res) {
+          var codes = res.profileCodes || [res.primaryKey];
+          var badges = codes.map(function(c) {
+            return '<span class="disc-badge disc-' + c + '">' + c + '</span>';
+          }).join('');
+          var label = codes.length > 1
+            ? codes.map(function(c) { return profileData[c].name; }).join('+')
+            : profileData[codes[0]].name;
+          return badges + '<span style="font-size:.78rem;color:var(--text2);margin-left:6px">' + label + '</span>';
+        })(r) +
       '</td>' +
       '<td>' + r.date + '</td>' +
       '<td>' +
@@ -216,7 +232,9 @@ function filterTable() {
   }
   if (filter) {
     results = results.filter(function(r) {
-      return r.primaryKey === filter || (r.hasSecondary && r.secondaryKey === filter);
+      /* Inclui o resultado se o filtro corresponde a qualquer fator do perfil */
+      var codes = r.profileCodes || [r.primaryKey];
+      return codes.indexOf(filter) !== -1;
     });
   }
   renderParticipants(results);
