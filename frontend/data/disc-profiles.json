@@ -1,68 +1,1755 @@
 {
   "_meta": {
-    "version": "1.0.0",
-    "phase": "FASE 0 — estrutural (dados de exemplo para validação)",
-    "totalProfiles": 3,
-    "schema": {
-      "code":              "string  — sigla do perfil (ex: D, SC, DIS)",
-      "title":             "string  — nome completo do perfil",
-      "shortDescription":  "string  — descrição resumida (1-2 frases)",
-      "characteristics":   "array   — traços comportamentais centrais",
-      "strengths":         "array   — pontos fortes do perfil",
-      "relationships":     "array   — como se relaciona com os outros",
-      "decisionMaking":    "array   — estilo de tomada de decisão",
-      "motivators":        "array   — o que impulsiona e engaja este perfil",
-      "fears":             "array   — o que mais incomoda ou amedronta",
-      "developmentPoints": "array   — áreas de desenvolvimento recomendadas",
-      "underPressure":     "array   — comportamentos em situações de pressão"
+    "versao": "1.0",
+    "totalPerfis": 40,
+    "ultimaAtualizacao": "2025-06-02",
+    "categorias": {
+      "simples": ["D","I","S","C"],
+      "duplos": ["DI","ID","DS","SD","DC","CD","IS","SI","IC","CI","SC","CS"],
+      "triplos": ["DIS","DSI","IDS","ISD","SDI","SID","DIC","DCI","IDC","ICD","CDI","CID","DSC","DCS","SDC","SCD","CDS","CSD","ISC","ICS","SIC","SCI","CIS","CSI"]
     },
-    "notes": [
-      "Nesta fase os arrays estão vazios intencionalmente.",
-      "O preenchimento completo de cada perfil ocorrerá nas fases seguintes.",
-      "Suporta perfis simples (D, I, S, C), duplos (DI, SC…) e triplos (DIS, DSC…).",
-      "A chave de cada perfil é idêntica ao campo 'code' para facilitar lookup direto."
+    "schema": {
+      "codigo":                "string  — sigla do perfil",
+      "nome":                  "string  — nome completo (ex: Dominante Influente)",
+      "titulo":                "string  — título resumido",
+      "descricaoCurta":        "string  — descrição de 1-2 frases",
+      "caracteristicas":       "string  — parágrafo de características",
+      "potencialidades":       "array   — lista de pontos fortes",
+      "relacoesInterpessoais": "string  — parágrafo de relações",
+      "tomadaDecisao":         "string  — parágrafo de tomada de decisão",
+      "motivadores":           "array   — lista de motivadores",
+      "medos":                 "array   — lista de medos",
+      "pontosDesenvolver":     "array   — lista de pontos a desenvolver",
+      "sobPressao":            "string  — parágrafo de comportamento sob pressão"
+    },
+    "notas": [
+      "Textos preservados integralmente dos documentos originais.",
+      "Validação anti-duplicata por campo codigo.",
+      "Compatible com ProfileService da Fase 0."
     ]
   },
 
   "D": {
-    "code": "D",
-    "title": "Dominante",
-    "shortDescription": "Perfil orientado a resultados, direto e assertivo. Age com rapidez e determinação para atingir objetivos.",
-    "characteristics":   [],
-    "strengths":         [],
-    "relationships":     [],
-    "decisionMaking":    [],
-    "motivators":        [],
-    "fears":             [],
-    "developmentPoints": [],
-    "underPressure":     []
+    "codigo": "D",
+    "nome": "Dominância",
+    "titulo": "Dominante",
+    "descricaoCurta": "Perfil orientado a resultados, direto e assertivo. Age com rapidez e determinação para atingir objetivos.",
+    "caracteristicas": "Você tende a ser uma pessoa direta, determinada e orientada para resultados. Gosta de desafios, valoriza a autonomia e costuma agir com rapidez diante de situações que exigem decisão. Tem facilidade para assumir responsabilidades e buscar soluções práticas para os problemas.",
+    "potencialidades": [
+      "Você possui forte capacidade de liderança.",
+      "Tem iniciativa para agir e tomar decisões.",
+      "Consegue enfrentar desafios com coragem.",
+      "Demonstra persistência diante de obstáculos.",
+      "Possui foco em metas e resultados.",
+      "Tem facilidade para resolver problemas.",
+      "Costuma influenciar ambientes por meio de sua determinação."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos objetivos, transparentes e produtivos. Costuma respeitar pessoas comprometidas, proativas e que assumem responsabilidades. Em alguns momentos, pode ser percebido como exigente ou impaciente, especialmente quando encontra lentidão, indecisão ou falta de comprometimento.",
+    "tomadaDecisao": "Você tende a tomar decisões de forma rápida e confiante. Analisa as situações com foco em resultados e normalmente não tem dificuldade em assumir riscos calculados. Prefere agir e ajustar o percurso quando necessário, em vez de permanecer excessivamente analisando possibilidades.",
+    "motivadores": [
+      "Desafios.",
+      "Resultados.",
+      "Crescimento pessoal e profissional.",
+      "Autonomia.",
+      "Liderança.",
+      "Competitividade saudável.",
+      "Reconhecimento por desempenho."
+    ],
+    "medos": [
+      "Perder o controle das situações.",
+      "Depender excessivamente de outras pessoas.",
+      "Falhar em objetivos importantes.",
+      "Ser visto como incapaz ou incompetente.",
+      "Sentir-se limitado em sua autonomia."
+    ],
+    "pontosDesenvolver": [
+      "Desenvolver mais paciência.",
+      "Ouvir diferentes perspectivas antes de decidir.",
+      "Demonstrar maior empatia.",
+      "Valorizar mais os relacionamentos.",
+      "Aprender a delegar de forma equilibrada.",
+      "Considerar os impactos emocionais de suas decisões."
+    ],
+    "sobPressao": "Quando está sob pressão, sua tendência é assumir ainda mais o controle da situação. Você pode se tornar mais exigente, impaciente e direto. Seu foco em resultados aumenta, mas isso pode levá-lo a negligenciar aspectos emocionais ou relacionais. Seu desafio é equilibrar firmeza com sensibilidade, mantendo a eficiência sem comprometer os relacionamentos."
+  },
+
+  "I": {
+    "codigo": "I",
+    "nome": "Influência",
+    "titulo": "Influente",
+    "descricaoCurta": "Perfil comunicativo, entusiasta e orientado às pessoas. Constrói conexões com facilidade e inspira ambientes positivos.",
+    "caracteristicas": "Você tende a ser uma pessoa comunicativa, entusiasmada e sociável. Gosta de interagir com pessoas, compartilhar ideias e criar conexões. Seu otimismo e energia costumam impactar positivamente os ambientes em que está inserido.",
+    "potencialidades": [
+      "Você possui excelente capacidade de comunicação.",
+      "Tem facilidade para criar relacionamentos.",
+      "Consegue motivar e inspirar pessoas.",
+      "Demonstra criatividade e espontaneidade.",
+      "Tem habilidade para persuadir e influenciar.",
+      "Contribui para ambientes mais leves e positivos.",
+      "Facilita a integração entre pessoas e equipes."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos próximos, colaborativos e cheios de interação. Costuma criar conexões rapidamente e se sente energizado pela convivência com outras pessoas. Seu entusiasmo favorece a construção de vínculos, embora em alguns momentos possa falar mais do que ouvir.",
+    "tomadaDecisao": "Você tende a tomar decisões considerando pessoas, oportunidades e experiências. Sua escolha muitas vezes é influenciada pelo entusiasmo e pela possibilidade de crescimento ou novidade. Em alguns casos, pode agir impulsivamente quando está muito motivado.",
+    "motivadores": [
+      "Reconhecimento.",
+      "Relacionamentos.",
+      "Interação social.",
+      "Liberdade de expressão.",
+      "Criatividade.",
+      "Novas experiências.",
+      "Ambientes dinâmicos."
+    ],
+    "medos": [
+      "Rejeição.",
+      "Isolamento.",
+      "Falta de reconhecimento.",
+      "Perda de influência.",
+      "Ambientes excessivamente rígidos ou impessoais."
+    ],
+    "pontosDesenvolver": [
+      "Desenvolver maior disciplina.",
+      "Melhorar a organização.",
+      "Concluir o que inicia.",
+      "Administrar melhor o tempo.",
+      "Equilibrar emoção e planejamento.",
+      "Aprender a lidar com críticas de forma construtiva."
+    ],
+    "sobPressao": "Quando está sob pressão, você tende a buscar apoio e validação nas pessoas. Pode tornar-se mais emocional, impulsivo ou disperso. Em alguns momentos, procura evitar situações desconfortáveis ou desviar a atenção para atividades mais agradáveis. Seu desafio é manter o foco e enfrentar as situações difíceis com objetividade."
+  },
+
+  "S": {
+    "codigo": "S",
+    "nome": "Estabilidade",
+    "titulo": "Estável",
+    "descricaoCurta": "Perfil calmo, paciente e confiável. Valoriza a harmonia, os relacionamentos duradouros e a consistência.",
+    "caracteristicas": "Você tende a ser uma pessoa calma, paciente e confiável. Valoriza a estabilidade, a harmonia e os relacionamentos duradouros. Costuma agir com equilíbrio e demonstra grande capacidade de apoio às pessoas ao seu redor.",
+    "potencialidades": [
+      "Você transmite confiança.",
+      "Tem facilidade para cooperar.",
+      "Demonstra lealdade e comprometimento.",
+      "Possui excelente capacidade de escuta.",
+      "Constrói relacionamentos sólidos.",
+      "Promove estabilidade nos ambientes.",
+      "Atua como conciliador em situações de conflito."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos profundos e duradouros. Costuma ser visto como alguém acolhedor, paciente e disposto a ajudar. Procura preservar a harmonia e tende a evitar conflitos desnecessários.",
+    "tomadaDecisao": "Você tende a tomar decisões com cautela e reflexão. Analisa impactos, considera pessoas envolvidas e busca segurança antes de agir. Prefere ambientes previsíveis e decisões bem fundamentadas.",
+    "motivadores": [
+      "Segurança.",
+      "Harmonia.",
+      "Cooperação.",
+      "Relacionamentos estáveis.",
+      "Confiança.",
+      "Ambiente previsível.",
+      "Sentimento de pertencimento."
+    ],
+    "medos": [
+      "Conflitos.",
+      "Mudanças bruscas.",
+      "Instabilidade.",
+      "Rejeição.",
+      "Ambientes agressivos ou imprevisíveis."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais assertivo.",
+      "Aprender a dizer não.",
+      "Posicionar-se com mais firmeza.",
+      "Adaptar-se melhor às mudanças.",
+      "Tomar decisões com maior rapidez.",
+      "Expressar suas necessidades com clareza."
+    ],
+    "sobPressao": "Quando está sob pressão, sua tendência é buscar preservar a estabilidade e evitar confrontos. Você pode resistir a mudanças, assumir responsabilidades excessivas ou guardar emoções para si mesmo. Seu desafio é comunicar suas necessidades e enfrentar conflitos de forma saudável, sem acumular desgaste emocional."
+  },
+
+  "C": {
+    "codigo": "C",
+    "nome": "Conformidade",
+    "titulo": "Conforme",
+    "descricaoCurta": "Perfil analítico, organizado e criterioso. Valoriza qualidade, precisão e planejamento.",
+    "caracteristicas": "Você tende a ser uma pessoa analítica, organizada e criteriosa. Valoriza qualidade, precisão e planejamento. Costuma observar detalhes que muitas pessoas não percebem e busca realizar suas atividades com excelência.",
+    "potencialidades": [
+      "Você possui forte capacidade analítica.",
+      "Demonstra atenção aos detalhes.",
+      "Tem facilidade para planejar.",
+      "Busca qualidade em tudo o que faz.",
+      "Consegue identificar riscos e oportunidades.",
+      "Atua com responsabilidade e consistência.",
+      "Produz soluções estruturadas e bem fundamentadas."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos baseados em respeito, competência e coerência. Costuma ser mais reservado inicialmente e prefere conexões construídas de forma gradual. Aprecia conversas objetivas e fundamentadas.",
+    "tomadaDecisao": "Você tende a tomar decisões com base em fatos, dados e informações confiáveis. Analisa cuidadosamente os cenários antes de agir e procura minimizar riscos. Seu foco está na precisão e na qualidade da decisão.",
+    "motivadores": [
+      "Qualidade.",
+      "Precisão.",
+      "Organização.",
+      "Conhecimento.",
+      "Competência.",
+      "Estrutura.",
+      "Melhoria contínua."
+    ],
+    "medos": [
+      "Cometer erros.",
+      "Ser criticado por falhas.",
+      "Tomar decisões precipitadas.",
+      "Ambientes desorganizados.",
+      "Falta de critérios ou padrões."
+    ],
+    "pontosDesenvolver": [
+      "Reduzir o perfeccionismo excessivo.",
+      "Agir com mais rapidez quando necessário.",
+      "Tornar-se mais flexível diante de mudanças.",
+      "Aceitar que erros fazem parte do aprendizado.",
+      "Desenvolver maior espontaneidade.",
+      "Fortalecer a comunicação emocional."
+    ],
+    "sobPressao": "Quando está sob pressão, sua tendência é aumentar o nível de análise e controle. Você pode tornar-se excessivamente crítico, perfeccionista e cauteloso. Em situações mais intensas, corre o risco de adiar decisões enquanto busca mais informações ou segurança. Seu desafio é equilibrar análise e ação, aceitando que nem tudo pode ser controlado ou previsto com absoluta precisão."
+  },
+
+  "DI": {
+    "codigo": "DI",
+    "nome": "Dominante Influente",
+    "titulo": "Dominante Influente",
+    "descricaoCurta": "Perfil enérgico, persuasivo e orientado para resultados. Combina determinação com comunicação e entusiasmo.",
+    "caracteristicas": "Você tende a ser uma pessoa enérgica, persuasiva e orientada para resultados. Combina a determinação do perfil D com a comunicação e o entusiasmo do perfil I. Gosta de liderar, influenciar pessoas e alcançar objetivos desafiadores.",
+    "potencialidades": [
+      "Liderança inspiradora.",
+      "Capacidade de mobilizar pessoas.",
+      "Comunicação persuasiva.",
+      "Iniciativa e ousadia.",
+      "Facilidade para criar oportunidades.",
+      "Visão de crescimento.",
+      "Influência positiva sobre equipes."
+    ],
+    "relacoesInterpessoais": "Você costuma ser sociável, comunicativo e influente. Gosta de estar cercado de pessoas e possui facilidade para assumir posições de destaque. Sua energia contagia o ambiente, embora em alguns momentos possa dominar excessivamente as conversas ou decisões.",
+    "tomadaDecisao": "Você toma decisões com rapidez e confiança, considerando tanto resultados quanto oportunidades. Costuma agir com coragem e acredita em sua capacidade de fazer as coisas acontecerem.",
+    "motivadores": [
+      "Desafios.",
+      "Reconhecimento.",
+      "Crescimento.",
+      "Liderança.",
+      "Influência.",
+      "Liberdade para agir.",
+      "Novas oportunidades."
+    ],
+    "medos": [
+      "Falhar publicamente.",
+      "Perder influência.",
+      "Ser ignorado.",
+      "Sentir-se limitado.",
+      "Não alcançar seus objetivos."
+    ],
+    "pontosDesenvolver": [
+      "Ouvir mais antes de decidir.",
+      "Desenvolver maior paciência.",
+      "Planejar melhor antes de agir.",
+      "Considerar opiniões divergentes.",
+      "Equilibrar entusiasmo e prudência."
+    ],
+    "sobPressao": "Sob pressão, você tende a assumir o controle e aumentar sua intensidade. Pode tornar-se impaciente, impulsivo ou excessivamente confiante. Seu desafio é desacelerar, ouvir mais e evitar decisões precipitadas."
+  },
+
+  "ID": {
+    "codigo": "ID",
+    "nome": "Influente Dominante",
+    "titulo": "Influente Dominante",
+    "descricaoCurta": "Perfil extremamente comunicativo, otimista e influente, com forte necessidade de conquistar resultados e reconhecimento.",
+    "caracteristicas": "Você tende a ser uma pessoa extremamente comunicativa, otimista e influente. Sua capacidade de relacionamento é elevada, mas também existe uma forte necessidade de conquistar resultados e reconhecimento.",
+    "potencialidades": [
+      "Comunicação inspiradora.",
+      "Facilidade para criar conexões.",
+      "Entusiasmo contagiante.",
+      "Capacidade de motivar equipes.",
+      "Espírito empreendedor.",
+      "Criatividade.",
+      "Influência social."
+    ],
+    "relacoesInterpessoais": "Você constrói relacionamentos rapidamente e costuma ser bem recebido pelos grupos. Valoriza a interação social e gosta de compartilhar ideias. Seu carisma favorece a construção de redes de relacionamento.",
+    "tomadaDecisao": "Você toma decisões com base em oportunidades, pessoas e possibilidades de crescimento. Pode agir rapidamente quando se sente motivado ou inspirado por uma ideia.",
+    "motivadores": [
+      "Reconhecimento.",
+      "Popularidade.",
+      "Relacionamentos.",
+      "Liberdade.",
+      "Novidades.",
+      "Crescimento pessoal.",
+      "Participação ativa."
+    ],
+    "medos": [
+      "Rejeição.",
+      "Falta de reconhecimento.",
+      "Isolamento.",
+      "Perda de influência.",
+      "Rotina excessiva."
+    ],
+    "pontosDesenvolver": [
+      "Desenvolver mais disciplina.",
+      "Melhorar o acompanhamento de projetos.",
+      "Organizar melhor prioridades.",
+      "Equilibrar emoção e razão.",
+      "Aprender a concluir o que inicia."
+    ],
+    "sobPressao": "Sob pressão, você pode tornar-se mais emocional e impulsivo. Existe a tendência de agir rapidamente sem avaliar todas as consequências. Seu desafio é manter o foco e agir de forma estruturada."
+  },
+
+  "DS": {
+    "codigo": "DS",
+    "nome": "Dominante Estável",
+    "titulo": "Dominante Estável",
+    "descricaoCurta": "Perfil que combina determinação com equilíbrio. Foco em resultados aliado a relacionamentos sólidos e estabilidade.",
+    "caracteristicas": "Você combina determinação com equilíbrio. Possui foco em resultados, mas também valoriza relacionamentos e estabilidade. Costuma liderar de forma firme, porém respeitosa.",
+    "potencialidades": [
+      "Liderança equilibrada.",
+      "Persistência.",
+      "Confiabilidade.",
+      "Capacidade de execução.",
+      "Foco em resultados sustentáveis.",
+      "Estabilidade emocional.",
+      "Comprometimento."
+    ],
+    "relacoesInterpessoais": "Você tende a construir relacionamentos sólidos e duradouros. Demonstra firmeza sem perder o respeito pelas pessoas. Costuma ser visto como alguém confiável e consistente.",
+    "tomadaDecisao": "Você toma decisões com segurança, mas normalmente avalia os impactos antes de agir. Busca equilíbrio entre rapidez e responsabilidade.",
+    "motivadores": [
+      "Resultados.",
+      "Segurança.",
+      "Estabilidade.",
+      "Compromisso.",
+      "Crescimento sustentável.",
+      "Liderança.",
+      "Confiança."
+    ],
+    "medos": [
+      "Instabilidade.",
+      "Falta de controle.",
+      "Conflitos desnecessários.",
+      "Quebra de confiança.",
+      "Mudanças sem planejamento."
+    ],
+    "pontosDesenvolver": [
+      "Adaptar-se mais rapidamente às mudanças.",
+      "Expressar emoções com maior abertura.",
+      "Evitar assumir responsabilidades excessivas.",
+      "Desenvolver maior flexibilidade.",
+      "Delegar mais."
+    ],
+    "sobPressao": "Sob pressão, você tende a assumir responsabilidades e tentar resolver tudo sozinho. Pode acumular desgaste emocional enquanto mantém uma aparência de controle e estabilidade."
+  },
+
+  "SD": {
+    "codigo": "SD",
+    "nome": "Estável Dominante",
+    "titulo": "Estável Dominante",
+    "descricaoCurta": "Perfil calmo, consistente e determinado. Busca estabilidade, mas age com firmeza quando é necessário resolver situações.",
+    "caracteristicas": "Você tende a ser uma pessoa calma, consistente e determinada. Busca estabilidade, mas não desiste de agir quando percebe que algo precisa ser resolvido.",
+    "potencialidades": [
+      "Perseverança.",
+      "Confiabilidade.",
+      "Capacidade de liderança tranquila.",
+      "Relacionamentos duradouros.",
+      "Organização.",
+      "Resiliência.",
+      "Comprometimento."
+    ],
+    "relacoesInterpessoais": "Você valoriza confiança, lealdade e cooperação. Costuma criar vínculos profundos e procura preservar a harmonia sem renunciar a seus princípios.",
+    "tomadaDecisao": "Você toma decisões com cautela, mas quando decide seguir um caminho demonstra firmeza e persistência para alcançar seus objetivos.",
+    "motivadores": [
+      "Segurança.",
+      "Relacionamentos sólidos.",
+      "Estabilidade.",
+      "Confiança.",
+      "Propósito.",
+      "Ambiente harmonioso.",
+      "Resultados consistentes."
+    ],
+    "medos": [
+      "Rejeição.",
+      "Instabilidade.",
+      "Conflitos intensos.",
+      "Mudanças bruscas.",
+      "Perda de vínculos importantes."
+    ],
+    "pontosDesenvolver": [
+      "Ser mais assertivo em situações difíceis.",
+      "Adaptar-se mais rapidamente a mudanças.",
+      "Evitar procrastinar decisões necessárias.",
+      "Expor opiniões com mais firmeza.",
+      "Assumir riscos calculados."
+    ],
+    "sobPressao": "Sob pressão, você tende a resistir a mudanças e pode tornar-se mais teimoso ou inflexível. Busca preservar a estabilidade e evitar situações que aumentem a tensão."
+  },
+
+  "DC": {
+    "codigo": "DC",
+    "nome": "Dominante Conforme",
+    "titulo": "Dominante Conforme",
+    "descricaoCurta": "Perfil que combina determinação com pensamento analítico. Busca resultados por meio de planejamento, qualidade e estratégia.",
+    "caracteristicas": "Você combina determinação com pensamento analítico. Busca resultados, mas prefere alcançá-los por meio de planejamento, qualidade e estratégia.",
+    "potencialidades": [
+      "Liderança estratégica.",
+      "Pensamento crítico.",
+      "Planejamento.",
+      "Organização.",
+      "Solução de problemas complexos.",
+      "Alta capacidade analítica.",
+      "Foco em excelência."
+    ],
+    "relacoesInterpessoais": "Você tende a ser mais reservado e seletivo. Valoriza competência, responsabilidade e objetividade. Costuma demonstrar respeito por pessoas preparadas e comprometidas.",
+    "tomadaDecisao": "Você toma decisões com firmeza, mas baseadas em dados, lógica e análise. Procura minimizar riscos sem comprometer os resultados.",
+    "motivadores": [
+      "Desafios.",
+      "Excelência.",
+      "Resultados.",
+      "Competência.",
+      "Autonomia.",
+      "Conhecimento.",
+      "Eficiência."
+    ],
+    "medos": [
+      "Falhar.",
+      "Cometer erros.",
+      "Perder credibilidade.",
+      "Falta de controle.",
+      "Improvisação excessiva."
+    ],
+    "pontosDesenvolver": [
+      "Desenvolver maior flexibilidade.",
+      "Demonstrar mais empatia.",
+      "Reduzir o perfeccionismo excessivo.",
+      "Valorizar mais os aspectos emocionais.",
+      "Delegar com mais confiança."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar o controle, a cobrança e o nível de exigência. Pode tornar-se excessivamente crítico consigo mesmo e com os outros."
+  },
+
+  "CD": {
+    "codigo": "CD",
+    "nome": "Conforme Dominante",
+    "titulo": "Conforme Dominante",
+    "descricaoCurta": "Perfil criterioso, estratégico e orientado para resultados. Busca excelência com forte senso de responsabilidade.",
+    "caracteristicas": "Você tende a ser uma pessoa criteriosa, estratégica e orientada para resultados. Busca excelência e possui forte senso de responsabilidade.",
+    "potencialidades": [
+      "Planejamento estratégico.",
+      "Organização.",
+      "Disciplina.",
+      "Capacidade analítica.",
+      "Controle de qualidade.",
+      "Solução estruturada de problemas.",
+      "Alta confiabilidade."
+    ],
+    "relacoesInterpessoais": "Você prefere relacionamentos construídos com base em respeito, competência e confiança. Costuma ser reservado inicialmente, mas demonstra lealdade quando estabelece vínculos.",
+    "tomadaDecisao": "Você toma decisões cuidadosamente, avaliando riscos, impactos e consequências. Busca segurança sem perder o foco nos objetivos.",
+    "motivadores": [
+      "Qualidade.",
+      "Competência.",
+      "Segurança.",
+      "Resultados.",
+      "Organização.",
+      "Conhecimento.",
+      "Melhoria contínua."
+    ],
+    "medos": [
+      "Erros.",
+      "Falta de preparo.",
+      "Críticas injustas.",
+      "Ambientes caóticos.",
+      "Decisões impulsivas."
+    ],
+    "pontosDesenvolver": [
+      "Agir mais rapidamente quando necessário.",
+      "Tornar-se mais flexível.",
+      "Reduzir a autocrítica excessiva.",
+      "Desenvolver maior espontaneidade.",
+      "Aprender a lidar melhor com imprevistos."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar a análise e a necessidade de controle. Pode adiar decisões em busca de mais segurança ou tornar-se excessivamente crítico diante de falhas e imprevistos."
+  },
+
+  "IS": {
+    "codigo": "IS",
+    "nome": "Influente Estável",
+    "titulo": "Influente Estável",
+    "descricaoCurta": "Perfil comunicativo, acolhedor e colaborativo. Combina entusiasmo com paciência e constrói relacionamentos harmoniosos.",
+    "caracteristicas": "Você tende a ser uma pessoa comunicativa, acolhedora e colaborativa. Combina o entusiasmo e a sociabilidade do perfil I com a paciência e a estabilidade do perfil S. Gosta de construir relacionamentos harmoniosos e contribuir para o bem-estar das pessoas ao seu redor.",
+    "potencialidades": [
+      "Facilidade para criar conexões.",
+      "Empatia e acolhimento.",
+      "Capacidade de motivar pessoas.",
+      "Trabalho em equipe.",
+      "Comunicação positiva.",
+      "Construção de relacionamentos duradouros.",
+      "Ambiente harmonioso e colaborativo."
+    ],
+    "relacoesInterpessoais": "Você valoriza profundamente os relacionamentos e costuma ser visto como alguém amigável, acessível e confiável. Tem facilidade para ouvir, apoiar e incentivar as pessoas, contribuindo para a união dos grupos.",
+    "tomadaDecisao": "Você tende a considerar tanto os impactos emocionais quanto os relacionais antes de decidir. Procura evitar conflitos desnecessários e busca soluções que beneficiem todas as partes envolvidas.",
+    "motivadores": [
+      "Relacionamentos.",
+      "Harmonia.",
+      "Cooperação.",
+      "Reconhecimento.",
+      "Pertencimento.",
+      "Trabalho em equipe.",
+      "Ambientes positivos."
+    ],
+    "medos": [
+      "Rejeição.",
+      "Conflitos.",
+      "Desaprovação.",
+      "Perda de vínculos importantes.",
+      "Ambientes hostis."
+    ],
+    "pontosDesenvolver": [
+      "Posicionar-se com mais firmeza.",
+      "Aprender a dizer não.",
+      "Tomar decisões difíceis com maior rapidez.",
+      "Evitar depender excessivamente da aprovação dos outros.",
+      "Desenvolver maior assertividade."
+    ],
+    "sobPressao": "Sob pressão, você tende a evitar conflitos e buscar manter a harmonia. Pode ter dificuldade em expressar insatisfações ou tomar decisões que desagradem outras pessoas, acumulando desgaste emocional."
+  },
+
+  "SI": {
+    "codigo": "SI",
+    "nome": "Estável Influente",
+    "titulo": "Estável Influente",
+    "descricaoCurta": "Perfil paciente, confiável e sociável. Valoriza relacionamentos duradouros e constrói vínculos profundos com gentileza.",
+    "caracteristicas": "Você tende a ser uma pessoa paciente, confiável e sociável. Valoriza relacionamentos duradouros e gosta de contribuir para ambientes harmoniosos e acolhedores. Seu jeito gentil favorece a construção de vínculos profundos.",
+    "potencialidades": [
+      "Relacionamentos sólidos.",
+      "Capacidade de apoio.",
+      "Escuta ativa.",
+      "Influência positiva.",
+      "Cooperação.",
+      "Lealdade.",
+      "Estabilidade emocional."
+    ],
+    "relacoesInterpessoais": "Você cria conexões de forma gradual, mas consistente. Costuma ser visto como alguém confiável, agradável e disposto a ajudar. Valoriza amizades verdadeiras e relações baseadas em respeito e confiança.",
+    "tomadaDecisao": "Você tende a refletir antes de agir, considerando os impactos de suas decisões sobre as pessoas envolvidas. Prefere soluções equilibradas e sustentáveis.",
+    "motivadores": [
+      "Segurança.",
+      "Harmonia.",
+      "Relacionamentos.",
+      "Cooperação.",
+      "Estabilidade.",
+      "Confiança.",
+      "Reconhecimento sincero."
+    ],
+    "medos": [
+      "Conflitos.",
+      "Rejeição.",
+      "Instabilidade.",
+      "Quebra de confiança.",
+      "Mudanças bruscas."
+    ],
+    "pontosDesenvolver": [
+      "Assumir posições com mais firmeza.",
+      "Desenvolver maior agilidade em decisões importantes.",
+      "Adaptar-se mais rapidamente às mudanças.",
+      "Evitar excessiva acomodação.",
+      "Expor opiniões com mais segurança."
+    ],
+    "sobPressao": "Sob pressão, você pode se retrair emocionalmente e evitar confrontos. Existe a tendência de suportar situações difíceis por mais tempo do que deveria, para preservar a harmonia."
+  },
+
+  "IC": {
+    "codigo": "IC",
+    "nome": "Influente Conforme",
+    "titulo": "Influente Conforme",
+    "descricaoCurta": "Perfil que combina criatividade e comunicação com análise e organização. Apresenta ideias com qualidade e consistência.",
+    "caracteristicas": "Você combina criatividade e comunicação com análise e organização. Tem facilidade para apresentar ideias, mas também se preocupa com qualidade, planejamento e consistência.",
+    "potencialidades": [
+      "Comunicação estruturada.",
+      "Criatividade aplicada.",
+      "Persuasão baseada em conhecimento.",
+      "Planejamento.",
+      "Organização.",
+      "Capacidade de ensino.",
+      "Influência fundamentada."
+    ],
+    "relacoesInterpessoais": "Você aprecia relacionamentos que combinam interação e profundidade. Gosta de compartilhar conhecimentos, trocar ideias e construir conexões baseadas em respeito e competência.",
+    "tomadaDecisao": "Você tende a equilibrar entusiasmo e análise. Considera possibilidades e oportunidades, mas também procura informações antes de agir.",
+    "motivadores": [
+      "Reconhecimento.",
+      "Conhecimento.",
+      "Qualidade.",
+      "Criatividade.",
+      "Crescimento.",
+      "Desenvolvimento pessoal.",
+      "Ambientes intelectualmente estimulantes."
+    ],
+    "medos": [
+      "Falhar.",
+      "Ser criticado.",
+      "Cometer erros.",
+      "Perder credibilidade.",
+      "Não ser valorizado."
+    ],
+    "pontosDesenvolver": [
+      "Evitar excesso de análise.",
+      "Agir com mais rapidez quando necessário.",
+      "Reduzir a preocupação excessiva com aprovação.",
+      "Desenvolver maior tolerância ao erro.",
+      "Equilibrar perfeccionismo e produtividade."
+    ],
+    "sobPressao": "Sob pressão, você pode alternar entre impulsividade e excesso de análise. Existe a tendência de buscar mais informações enquanto tenta manter uma imagem positiva diante dos outros."
+  },
+
+  "CI": {
+    "codigo": "CI",
+    "nome": "Conforme Influente",
+    "titulo": "Conforme Influente",
+    "descricaoCurta": "Perfil analítico, organizado e comunicativo. Transmite conhecimento com clareza e constrói influência pela credibilidade.",
+    "caracteristicas": "Você tende a ser uma pessoa analítica, organizada e comunicativa. Busca compreender profundamente as situações e tem facilidade para transmitir conhecimento de forma clara e estruturada.",
+    "potencialidades": [
+      "Pensamento analítico.",
+      "Comunicação clara.",
+      "Planejamento.",
+      "Capacidade didática.",
+      "Organização.",
+      "Influência baseada em credibilidade.",
+      "Solução estruturada de problemas."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos construídos sobre confiança, respeito e competência. Embora possa ser mais reservado inicialmente, costuma desenvolver conexões significativas ao longo do tempo.",
+    "tomadaDecisao": "Você toma decisões com base em informações e análises, mas também considera o impacto de suas escolhas sobre as pessoas envolvidas.",
+    "motivadores": [
+      "Conhecimento.",
+      "Qualidade.",
+      "Organização.",
+      "Reconhecimento por competência.",
+      "Crescimento intelectual.",
+      "Desenvolvimento contínuo.",
+      "Segurança."
+    ],
+    "medos": [
+      "Erros.",
+      "Críticas.",
+      "Improvisação.",
+      "Falta de preparo.",
+      "Exposição negativa."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais flexível.",
+      "Reduzir o perfeccionismo.",
+      "Assumir mais riscos calculados.",
+      "Desenvolver espontaneidade.",
+      "Agir mesmo sem todas as informações disponíveis."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar o nível de análise e autocobrança. Pode tornar-se excessivamente crítico e hesitar diante de decisões que envolvam riscos."
   },
 
   "SC": {
-    "code": "SC",
-    "title": "Estável Conforme",
-    "shortDescription": "Perfil que combina consistência e precisão. Une lealdade e cuidado com a qualidade dos processos.",
-    "characteristics":   [],
-    "strengths":         [],
-    "relationships":     [],
-    "decisionMaking":    [],
-    "motivators":        [],
-    "fears":             [],
-    "developmentPoints": [],
-    "underPressure":     []
+    "codigo": "SC",
+    "nome": "Estável Conforme",
+    "titulo": "Estável Conforme",
+    "descricaoCurta": "Perfil calmo, organizado e confiável. Combina estabilidade com precisão, valorizando segurança e planejamento.",
+    "caracteristicas": "Você tende a ser uma pessoa calma, organizada e confiável. Combina a estabilidade do perfil S com a precisão do perfil C. Valoriza segurança, planejamento e relacionamentos consistentes.",
+    "potencialidades": [
+      "Organização.",
+      "Disciplina.",
+      "Confiabilidade.",
+      "Persistência.",
+      "Planejamento.",
+      "Atenção aos detalhes.",
+      "Relacionamentos duradouros."
+    ],
+    "relacoesInterpessoais": "Você prefere relacionamentos sólidos e previsíveis. Demonstra lealdade, responsabilidade e compromisso. Costuma conquistar a confiança das pessoas por meio da consistência de suas atitudes.",
+    "tomadaDecisao": "Você tende a tomar decisões de forma cautelosa e bem fundamentada. Analisa riscos, consequências e impactos antes de agir.",
+    "motivadores": [
+      "Segurança.",
+      "Estabilidade.",
+      "Organização.",
+      "Harmonia.",
+      "Qualidade.",
+      "Planejamento.",
+      "Confiança."
+    ],
+    "medos": [
+      "Mudanças bruscas.",
+      "Conflitos.",
+      "Erros.",
+      "Ambientes caóticos.",
+      "Instabilidade."
+    ],
+    "pontosDesenvolver": [
+      "Adaptar-se mais rapidamente às mudanças.",
+      "Desenvolver maior flexibilidade.",
+      "Assumir riscos calculados.",
+      "Posicionar-se com mais firmeza.",
+      "Evitar excesso de cautela."
+    ],
+    "sobPressao": "Sob pressão, você tende a se tornar mais reservado e cauteloso. Pode resistir a mudanças, evitar conflitos e buscar ainda mais controle e previsibilidade."
+  },
+
+  "CS": {
+    "codigo": "CS",
+    "nome": "Conforme Estável",
+    "titulo": "Conforme Estável",
+    "descricaoCurta": "Perfil organizado, responsável e equilibrado. Busca excelência enquanto valoriza estabilidade e relacionamentos harmoniosos.",
+    "caracteristicas": "Você tende a ser uma pessoa organizada, responsável e equilibrada. Busca excelência em suas atividades, mas também valoriza estabilidade e relacionamentos harmoniosos.",
+    "potencialidades": [
+      "Planejamento.",
+      "Organização.",
+      "Disciplina.",
+      "Responsabilidade.",
+      "Estabilidade emocional.",
+      "Atenção aos detalhes.",
+      "Confiabilidade."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos baseados em respeito, confiança e lealdade. Costuma agir com cautela, mas desenvolve vínculos sólidos e duradouros quando se sente seguro.",
+    "tomadaDecisao": "Você toma decisões de forma analítica e cuidadosa. Busca compreender todos os aspectos envolvidos antes de agir, minimizando riscos e incertezas.",
+    "motivadores": [
+      "Qualidade.",
+      "Segurança.",
+      "Organização.",
+      "Estabilidade.",
+      "Competência.",
+      "Confiança.",
+      "Melhoria contínua."
+    ],
+    "medos": [
+      "Falhas.",
+      "Mudanças inesperadas.",
+      "Críticas.",
+      "Ambientes instáveis.",
+      "Falta de controle."
+    ],
+    "pontosDesenvolver": [
+      "Agir com mais rapidez.",
+      "Tornar-se mais flexível.",
+      "Aceitar melhor mudanças e imprevistos.",
+      "Reduzir o perfeccionismo.",
+      "Expressar opiniões com mais assertividade."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar a cautela, a análise e a necessidade de controle. Pode evitar decisões rápidas e buscar segurança excessiva antes de agir, o que pode gerar lentidão em momentos que exigem respostas imediatas."
   },
 
   "DIS": {
-    "code": "DIS",
-    "title": "Dominante Influente Estável",
-    "shortDescription": "Perfil multidimensional que combina liderança, persuasão e consistência. Age com energia e mantém o time engajado.",
-    "characteristics":   [],
-    "strengths":         [],
-    "relationships":     [],
-    "decisionMaking":    [],
-    "motivators":        [],
-    "fears":             [],
-    "developmentPoints": [],
-    "underPressure":     []
+    "codigo": "DIS",
+    "nome": "Dominante Influente Estável",
+    "titulo": "Dominante Influente Estável",
+    "descricaoCurta": "Perfil que combina liderança, comunicação e estabilidade, unindo energia, determinação e empatia.",
+    "caracteristicas": "Você combina liderança, comunicação e estabilidade. Possui facilidade para influenciar pessoas, alcançar resultados e construir relacionamentos duradouros. Costuma ser visto como alguém que une energia, determinação e empatia.",
+    "potencialidades": [
+      "Liderança inspiradora.",
+      "Excelente comunicação.",
+      "Capacidade de mobilizar equipes.",
+      "Persistência diante dos desafios.",
+      "Relacionamentos sólidos.",
+      "Influência positiva.",
+      "Equilíbrio entre ação e cooperação."
+    ],
+    "relacoesInterpessoais": "Você tende a desenvolver relacionamentos com facilidade, equilibrando firmeza e proximidade. Consegue liderar sem parecer autoritário e influenciar sem perder a conexão humana. As pessoas costumam enxergá-lo como alguém acessível e confiável.",
+    "tomadaDecisao": "Você toma decisões considerando tanto os resultados quanto os impactos sobre as pessoas. Costuma agir com rapidez, mas também leva em conta a manutenção de relacionamentos e da harmonia.",
+    "motivadores": [
+      "Crescimento.",
+      "Reconhecimento.",
+      "Relacionamentos.",
+      "Liderança.",
+      "Influência.",
+      "Desafios.",
+      "Sentimento de pertencimento."
+    ],
+    "medos": [
+      "Fracasso.",
+      "Rejeição.",
+      "Perda de influência.",
+      "Conflitos prolongados.",
+      "Ambientes excessivamente limitadores."
+    ],
+    "pontosDesenvolver": [
+      "Desenvolver maior objetividade em situações emocionais.",
+      "Evitar assumir responsabilidades excessivas.",
+      "Melhorar a gestão do tempo.",
+      "Aprender a dizer não quando necessário.",
+      "Equilibrar entusiasmo e disciplina."
+    ],
+    "sobPressao": "Sob pressão, você tende a assumir a liderança e tentar resolver os problemas rapidamente. Pode tornar-se impaciente ou assumir responsabilidades demais. Em alguns momentos, busca agradar as pessoas ao mesmo tempo em que tenta alcançar resultados, gerando desgaste emocional."
+  },
+
+  "DSI": {
+    "codigo": "DSI",
+    "nome": "Dominante Estável Influente",
+    "titulo": "Dominante Estável Influente",
+    "descricaoCurta": "Perfil firme nos objetivos que alcança resultados por meio da confiança e da cooperação, com liderança consistente.",
+    "caracteristicas": "Você combina determinação, estabilidade e habilidade de relacionamento. Costuma ser uma pessoa firme em seus objetivos, mas que procura alcançar resultados sem renunciar à construção de vínculos e da cooperação. Sua liderança tende a ser consistente e baseada em confiança.",
+    "potencialidades": [
+      "Liderança equilibrada.",
+      "Persistência diante dos desafios.",
+      "Capacidade de desenvolver pessoas.",
+      "Relacionamentos duradouros.",
+      "Influência positiva.",
+      "Organização na execução.",
+      "Comprometimento com resultados."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos sólidos e costuma construir confiança ao longo do tempo. Embora tenha perfil de liderança, prefere influenciar pelo exemplo e pela consistência de suas atitudes.",
+    "tomadaDecisao": "Você procura agir com firmeza, mas sem impulsividade. Costuma avaliar os impactos de suas decisões sobre as pessoas e sobre os resultados antes de agir.",
+    "motivadores": [
+      "Resultados consistentes.",
+      "Segurança.",
+      "Reconhecimento.",
+      "Relacionamentos de confiança.",
+      "Crescimento sustentável.",
+      "Liderança.",
+      "Cooperação."
+    ],
+    "medos": [
+      "Perda de controle.",
+      "Instabilidade.",
+      "Quebra de confiança.",
+      "Falta de comprometimento das pessoas.",
+      "Ambientes excessivamente conflitantes."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais flexível diante de mudanças rápidas.",
+      "Evitar excesso de responsabilidade.",
+      "Delegar com mais frequência.",
+      "Desenvolver maior espontaneidade.",
+      "Lidar melhor com imprevistos."
+    ],
+    "sobPressao": "Sob pressão, você tende a assumir o controle da situação e buscar estabilidade ao mesmo tempo. Pode tornar-se mais exigente consigo mesmo e com os outros, tentando garantir que tudo permaneça sob controle."
+  },
+
+  "IDS": {
+    "codigo": "IDS",
+    "nome": "Influente Dominante Estável",
+    "titulo": "Influente Dominante Estável",
+    "descricaoCurta": "Perfil que combina entusiasmo, liderança e estabilidade, transmitindo confiança e equilibrando energia com comprometimento.",
+    "caracteristicas": "Você combina entusiasmo, liderança e estabilidade. Possui facilidade para se relacionar, influenciar pessoas e conduzir grupos em direção a objetivos. Costuma equilibrar energia, carisma e comprometimento, transmitindo confiança aos que estão ao seu redor.",
+    "potencialidades": [
+      "Comunicação inspiradora.",
+      "Liderança natural.",
+      "Facilidade para criar conexões.",
+      "Capacidade de motivar equipes.",
+      "Influência positiva.",
+      "Relacionamentos duradouros.",
+      "Equilíbrio entre ação e colaboração."
+    ],
+    "relacoesInterpessoais": "Você tende a ser sociável, acolhedor e acessível. Gosta de estar próximo das pessoas e possui facilidade para construir relacionamentos sólidos. Seu carisma favorece a criação de ambientes harmoniosos e produtivos.",
+    "tomadaDecisao": "Você costuma tomar decisões considerando tanto os resultados quanto os impactos sobre as pessoas envolvidas. Busca agir com rapidez, mas procura manter a harmonia e o comprometimento do grupo.",
+    "motivadores": [
+      "Reconhecimento.",
+      "Relacionamentos.",
+      "Crescimento.",
+      "Liderança.",
+      "Cooperação.",
+      "Participação em grupos.",
+      "Influência positiva."
+    ],
+    "medos": [
+      "Rejeição.",
+      "Falta de reconhecimento.",
+      "Conflitos prolongados.",
+      "Perda de influência.",
+      "Rompimento de relacionamentos importantes."
+    ],
+    "pontosDesenvolver": [
+      "Melhorar o foco em prioridades.",
+      "Desenvolver maior disciplina na execução.",
+      "Evitar assumir compromissos excessivos.",
+      "Aprender a lidar com críticas de forma mais objetiva.",
+      "Equilibrar emoção e racionalidade."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar seu nível de atividade e comunicação. Pode tentar resolver tudo ao mesmo tempo ou buscar agradar diferentes pessoas simultaneamente. Seu desafio é manter o foco e evitar sobrecarga emocional."
+  },
+
+  "ISD": {
+    "codigo": "ISD",
+    "nome": "Influente Estável Dominante",
+    "titulo": "Influente Estável Dominante",
+    "descricaoCurta": "Perfil que combina entusiasmo, empatia e determinação, inspirando pessoas e preservando relacionamentos com firmeza quando necessário.",
+    "caracteristicas": "Você combina entusiasmo, empatia e determinação. Gosta de se relacionar, inspirar pessoas e contribuir para um ambiente harmonioso, mas também possui firmeza suficiente para assumir posições quando necessário.",
+    "potencialidades": [
+      "Comunicação inspiradora.",
+      "Capacidade de engajamento.",
+      "Relacionamentos sólidos.",
+      "Influência positiva.",
+      "Trabalho em equipe.",
+      "Liderança colaborativa.",
+      "Motivação de pessoas."
+    ],
+    "relacoesInterpessoais": "Você costuma ser acessível, acolhedor e sociável. Tem facilidade para criar conexões e valoriza profundamente a manutenção dos relacionamentos. As pessoas geralmente o percebem como alguém agradável e confiável.",
+    "tomadaDecisao": "Você tende a considerar primeiro as pessoas envolvidas e o impacto emocional de suas decisões. Quando necessário, consegue agir com firmeza para proteger objetivos e valores importantes.",
+    "motivadores": [
+      "Relacionamentos.",
+      "Reconhecimento.",
+      "Harmonia.",
+      "Cooperação.",
+      "Participação em grupos.",
+      "Influência positiva.",
+      "Ambiente acolhedor."
+    ],
+    "medos": [
+      "Rejeição.",
+      "Conflitos intensos.",
+      "Isolamento.",
+      "Perda de relacionamentos importantes.",
+      "Ambientes excessivamente frios ou impessoais."
+    ],
+    "pontosDesenvolver": [
+      "Desenvolver maior objetividade.",
+      "Aprender a lidar melhor com críticas.",
+      "Evitar adiar decisões difíceis.",
+      "Equilibrar emoção e razão.",
+      "Melhorar a gestão de prioridades."
+    ],
+    "sobPressao": "Sob pressão, você tende a buscar apoio das pessoas e preservar relacionamentos. Pode evitar confrontos diretos inicialmente, mas quando percebe riscos relevantes, demonstra firmeza e capacidade de liderança."
+  },
+
+  "SDI": {
+    "codigo": "SDI",
+    "nome": "Estável Dominante Influente",
+    "titulo": "Estável Dominante Influente",
+    "descricaoCurta": "Perfil confiável, determinado e sociável que constrói relacionamentos sólidos enquanto assume responsabilidades e conduz pessoas.",
+    "caracteristicas": "Você combina estabilidade, liderança e comunicação. Costuma ser uma pessoa confiável, determinada e sociável. Tem facilidade para construir relacionamentos sólidos, ao mesmo tempo em que assume responsabilidades e conduz pessoas em direção a objetivos.",
+    "potencialidades": [
+      "Liderança equilibrada.",
+      "Relacionamentos duradouros.",
+      "Comunicação positiva.",
+      "Capacidade de apoio e direcionamento.",
+      "Persistência.",
+      "Influência construtiva.",
+      "Forte comprometimento com pessoas e resultados."
+    ],
+    "relacoesInterpessoais": "Você valoriza relações de confiança e tende a criar vínculos profundos. Sua combinação de acolhimento e firmeza faz com que as pessoas se sintam seguras ao seu lado. Costuma exercer influência de forma natural e respeitosa.",
+    "tomadaDecisao": "Você procura equilibrar os resultados com os impactos sobre as pessoas. Costuma refletir antes de agir, mas quando toma uma decisão demonstra firmeza e comprometimento com sua execução.",
+    "motivadores": [
+      "Relacionamentos sólidos.",
+      "Segurança.",
+      "Reconhecimento.",
+      "Cooperação.",
+      "Liderança.",
+      "Harmonia.",
+      "Crescimento sustentável."
+    ],
+    "medos": [
+      "Rejeição.",
+      "Conflitos intensos.",
+      "Instabilidade.",
+      "Falta de reconhecimento.",
+      "Quebra de confiança."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais assertivo em situações difíceis.",
+      "Evitar acumular responsabilidades excessivas.",
+      "Desenvolver maior flexibilidade diante de mudanças.",
+      "Aprender a lidar melhor com críticas.",
+      "Evitar priorizar excessivamente a aprovação dos outros."
+    ],
+    "sobPressao": "Sob pressão, você tende a assumir mais responsabilidades para proteger pessoas e resultados. Pode evitar conflitos diretos e carregar sozinho problemas que poderiam ser compartilhados. Seu desafio é dividir responsabilidades e comunicar suas necessidades com clareza."
+  },
+
+  "SID": {
+    "codigo": "SID",
+    "nome": "Estável Influente Dominante",
+    "titulo": "Estável Influente Dominante",
+    "descricaoCurta": "Perfil paciente, confiável e influente que une pessoas em torno de objetivos comuns sem recorrer à imposição.",
+    "caracteristicas": "Você combina equilíbrio emocional, boa comunicação e determinação. Costuma ser uma pessoa paciente, confiável e influente, capaz de unir pessoas em torno de objetivos comuns sem recorrer à imposição.",
+    "potencialidades": [
+      "Estabilidade emocional.",
+      "Influência natural.",
+      "Capacidade de mediação.",
+      "Relacionamentos duradouros.",
+      "Trabalho em equipe.",
+      "Liderança equilibrada.",
+      "Persistência."
+    ],
+    "relacoesInterpessoais": "Você valoriza profundamente a confiança e a cooperação. Procura compreender as pessoas antes de julgá-las e tende a construir relacionamentos baseados em respeito e lealdade.",
+    "tomadaDecisao": "Você costuma refletir antes de agir, considerando tanto os resultados quanto os impactos sobre as pessoas envolvidas. Quando toma uma decisão, demonstra consistência e comprometimento.",
+    "motivadores": [
+      "Segurança.",
+      "Harmonia.",
+      "Relacionamentos.",
+      "Cooperação.",
+      "Reconhecimento.",
+      "Estabilidade.",
+      "Crescimento gradual."
+    ],
+    "medos": [
+      "Conflitos prolongados.",
+      "Instabilidade.",
+      "Rejeição.",
+      "Quebra de confiança.",
+      "Mudanças bruscas e inesperadas."
+    ],
+    "pontosDesenvolver": [
+      "Agir com mais rapidez em determinadas situações.",
+      "Desenvolver maior assertividade.",
+      "Evitar acomodação excessiva.",
+      "Assumir riscos calculados.",
+      "Posicionar-se com mais firmeza quando necessário."
+    ],
+    "sobPressao": "Sob pressão, você tende a se tornar mais reservado e cauteloso. Procura manter a estabilidade do ambiente e preservar relacionamentos, mas pode assumir responsabilidades excessivas para evitar conflitos ou problemas para outras pessoas."
+  },
+
+  "DIC": {
+    "codigo": "DIC",
+    "nome": "Dominante Influente Conforme",
+    "titulo": "Dominante Influente Conforme",
+    "descricaoCurta": "Perfil que combina liderança, comunicação e análise. Une visão de crescimento com planejamento e avaliação estratégica.",
+    "caracteristicas": "Você combina liderança, comunicação e análise. Possui capacidade de influenciar pessoas, tomar decisões e, ao mesmo tempo, avaliar cenários de forma estratégica. Costuma unir visão de crescimento com planejamento.",
+    "potencialidades": [
+      "Liderança estratégica.",
+      "Comunicação persuasiva.",
+      "Capacidade analítica.",
+      "Visão de oportunidades.",
+      "Solução estruturada de problemas.",
+      "Inovação.",
+      "Forte capacidade de execução."
+    ],
+    "relacoesInterpessoais": "Você tende a ser sociável, mas seletivo. Valoriza relacionamentos produtivos e costuma admirar pessoas competentes e comprometidas. Sua comunicação geralmente é clara e objetiva.",
+    "tomadaDecisao": "Você procura equilibrar velocidade e análise. Antes de agir, busca compreender os riscos e oportunidades envolvidos. Costuma tomar decisões com confiança, mas baseadas em informações consistentes.",
+    "motivadores": [
+      "Resultados.",
+      "Reconhecimento.",
+      "Crescimento.",
+      "Conhecimento.",
+      "Desafios.",
+      "Excelência.",
+      "Autonomia."
+    ],
+    "medos": [
+      "Falhar.",
+      "Perder credibilidade.",
+      "Cometer erros relevantes.",
+      "Ser limitado em suas decisões.",
+      "Não atingir seu potencial."
+    ],
+    "pontosDesenvolver": [
+      "Reduzir a autocrítica excessiva.",
+      "Desenvolver maior flexibilidade.",
+      "Demonstrar mais empatia em determinadas situações.",
+      "Evitar excesso de controle.",
+      "Aprender a delegar mais."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar a cobrança sobre si mesmo e sobre os outros. Pode alternar entre agir rapidamente e analisar excessivamente os detalhes. Seu desafio é equilibrar controle e confiança."
+  },
+
+  "DCI": {
+    "codigo": "DCI",
+    "nome": "Dominante Conforme Influente",
+    "titulo": "Dominante Conforme Influente",
+    "descricaoCurta": "Perfil orientado para resultados que valoriza planejamento e embasamento técnico, exercendo influência pela competência.",
+    "caracteristicas": "Você combina determinação, análise e comunicação. Costuma ser uma pessoa orientada para resultados, mas que valoriza planejamento, qualidade e embasamento técnico antes de agir. Sua influência normalmente surge da competência e da segurança que transmite.",
+    "potencialidades": [
+      "Liderança estratégica.",
+      "Capacidade analítica.",
+      "Comunicação objetiva.",
+      "Resolução de problemas complexos.",
+      "Tomada de decisão estruturada.",
+      "Busca por excelência.",
+      "Capacidade de implementação."
+    ],
+    "relacoesInterpessoais": "Você tende a valorizar relacionamentos produtivos e baseados em respeito mútuo. Embora possa parecer mais reservado inicialmente, consegue desenvolver influência significativa quando demonstra conhecimento e competência.",
+    "tomadaDecisao": "Você procura equilibrar velocidade e precisão. Normalmente toma decisões de forma firme, mas somente após avaliar riscos, oportunidades e informações relevantes.",
+    "motivadores": [
+      "Resultados.",
+      "Qualidade.",
+      "Crescimento.",
+      "Conhecimento.",
+      "Reconhecimento por competência.",
+      "Autonomia.",
+      "Eficiência."
+    ],
+    "medos": [
+      "Fracasso.",
+      "Perda de credibilidade.",
+      "Erros evitáveis.",
+      "Falta de controle.",
+      "Decisões mal fundamentadas."
+    ],
+    "pontosDesenvolver": [
+      "Demonstrar mais empatia em determinadas situações.",
+      "Evitar excesso de cobrança.",
+      "Desenvolver maior flexibilidade.",
+      "Aprender a delegar.",
+      "Equilibrar perfeccionismo e produtividade."
+    ],
+    "sobPressao": "Sob pressão, você tende a assumir o controle da situação e aumentar o nível de análise. Pode tornar-se mais crítico e exigente, buscando minimizar riscos e garantir resultados."
+  },
+
+  "IDC": {
+    "codigo": "IDC",
+    "nome": "Influente Dominante Conforme",
+    "titulo": "Influente Dominante Conforme",
+    "descricaoCurta": "Perfil que combina comunicação, liderança e análise. Conduz projetos com visão, entusiasmo e planejamento.",
+    "caracteristicas": "Você combina comunicação, liderança e análise. Possui facilidade para influenciar pessoas, apresentar ideias e conduzir projetos, mas também valoriza planejamento, qualidade e resultados consistentes.",
+    "potencialidades": [
+      "Comunicação estratégica.",
+      "Liderança persuasiva.",
+      "Capacidade analítica.",
+      "Criatividade aplicada.",
+      "Planejamento.",
+      "Solução de problemas.",
+      "Influência baseada em credibilidade."
+    ],
+    "relacoesInterpessoais": "Você gosta de se relacionar, compartilhar conhecimentos e participar de ambientes estimulantes. Costuma construir respeito por meio de sua competência e da forma clara como transmite suas ideias.",
+    "tomadaDecisao": "Você procura equilibrar entusiasmo e análise. Normalmente avalia oportunidades e riscos antes de agir, buscando decisões que tragam crescimento e segurança ao mesmo tempo.",
+    "motivadores": [
+      "Reconhecimento.",
+      "Conhecimento.",
+      "Resultados.",
+      "Crescimento.",
+      "Inovação.",
+      "Desenvolvimento pessoal.",
+      "Excelência."
+    ],
+    "medos": [
+      "Falhar.",
+      "Ser desacreditado.",
+      "Perder credibilidade.",
+      "Cometer erros importantes.",
+      "Não atingir seu potencial."
+    ],
+    "pontosDesenvolver": [
+      "Evitar excesso de análise.",
+      "Reduzir a autocrítica excessiva.",
+      "Desenvolver mais paciência com pessoas menos organizadas.",
+      "Aprender a delegar.",
+      "Equilibrar perfeccionismo e produtividade."
+    ],
+    "sobPressao": "Sob pressão, você pode oscilar entre agir rapidamente e revisar excessivamente detalhes. Existe a tendência de aumentar a cobrança sobre si mesmo e buscar controle total da situação."
+  },
+
+  "ICD": {
+    "codigo": "ICD",
+    "nome": "Influente Conforme Dominante",
+    "titulo": "Influente Conforme Dominante",
+    "descricaoCurta": "Perfil que combina comunicação, análise e liderança, compartilhando ideias e apresentando soluções com credibilidade.",
+    "caracteristicas": "Você combina comunicação, análise e liderança. Possui facilidade para compartilhar ideias, inspirar pessoas e apresentar soluções, mas também valoriza conhecimento, planejamento e qualidade.",
+    "potencialidades": [
+      "Comunicação persuasiva.",
+      "Criatividade estruturada.",
+      "Capacidade analítica.",
+      "Influência baseada em credibilidade.",
+      "Ensino e treinamento.",
+      "Solução de problemas.",
+      "Liderança intelectual."
+    ],
+    "relacoesInterpessoais": "Você gosta de interagir, trocar conhecimentos e participar de ambientes estimulantes. Costuma construir respeito por meio da combinação entre carisma e competência.",
+    "tomadaDecisao": "Você tende a analisar informações antes de agir, mas sem perder a visão das oportunidades. Busca decisões que gerem crescimento e reconhecimento, mantendo um nível adequado de segurança.",
+    "motivadores": [
+      "Reconhecimento.",
+      "Aprendizado.",
+      "Crescimento.",
+      "Inovação.",
+      "Relacionamentos.",
+      "Desenvolvimento pessoal.",
+      "Excelência."
+    ],
+    "medos": [
+      "Críticas.",
+      "Falhas públicas.",
+      "Perda de credibilidade.",
+      "Rejeição.",
+      "Não atingir seu potencial."
+    ],
+    "pontosDesenvolver": [
+      "Reduzir a dependência de aprovação.",
+      "Evitar excesso de análise.",
+      "Desenvolver mais constância na execução.",
+      "Lidar melhor com críticas.",
+      "Melhorar a gestão de prioridades."
+    ],
+    "sobPressao": "Sob pressão, você pode alternar entre buscar mais informações e tentar resolver tudo rapidamente. Existe a tendência de aumentar a preocupação com sua imagem e desempenho."
+  },
+
+  "CDI": {
+    "codigo": "CDI",
+    "nome": "Conforme Dominante Influente",
+    "titulo": "Conforme Dominante Influente",
+    "descricaoCurta": "Perfil estratégico, exigente e capaz de influenciar pessoas por meio de conhecimento, credibilidade e visão de futuro.",
+    "caracteristicas": "Você combina análise, liderança e comunicação. Costuma ser uma pessoa estratégica, exigente consigo mesma e capaz de influenciar pessoas por meio de conhecimento, credibilidade e visão de futuro. Busca excelência sem renunciar a resultados.",
+    "potencialidades": [
+      "Pensamento estratégico.",
+      "Liderança baseada em competência.",
+      "Comunicação objetiva e persuasiva.",
+      "Planejamento.",
+      "Solução de problemas complexos.",
+      "Capacidade analítica.",
+      "Visão de melhoria contínua."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos construídos sobre confiança, competência e respeito mútuo. Embora possa parecer reservado inicialmente, tende a se comunicar com clareza e influência quando se sente seguro e preparado.",
+    "tomadaDecisao": "Você procura reunir informações suficientes antes de decidir. Analisa riscos, oportunidades e consequências, buscando equilíbrio entre segurança e resultados.",
+    "motivadores": [
+      "Conhecimento.",
+      "Excelência.",
+      "Resultados.",
+      "Reconhecimento por competência.",
+      "Crescimento.",
+      "Autonomia.",
+      "Desenvolvimento contínuo."
+    ],
+    "medos": [
+      "Cometer erros.",
+      "Falhar publicamente.",
+      "Perder credibilidade.",
+      "Ser injustamente criticado.",
+      "Tomar decisões mal fundamentadas."
+    ],
+    "pontosDesenvolver": [
+      "Reduzir o perfeccionismo excessivo.",
+      "Agir com mais rapidez em algumas situações.",
+      "Desenvolver maior flexibilidade.",
+      "Aceitar melhor erros e imprevistos.",
+      "Delegar mais responsabilidades."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar o nível de análise, controle e cobrança. Pode tornar-se excessivamente crítico consigo mesmo e com os outros, buscando evitar qualquer possibilidade de erro."
+  },
+
+  "CID": {
+    "codigo": "CID",
+    "nome": "Conforme Influente Dominante",
+    "titulo": "Conforme Influente Dominante",
+    "descricaoCurta": "Perfil que busca conhecimento e excelência com habilidade para influenciar pessoas e conduzir projetos com precisão.",
+    "caracteristicas": "Você combina precisão, comunicação e determinação. Costuma ser uma pessoa que busca conhecimento, organização e excelência, mas que também possui habilidade para influenciar pessoas e conduzir projetos.",
+    "potencialidades": [
+      "Comunicação técnica e clara.",
+      "Planejamento.",
+      "Organização.",
+      "Influência baseada em conhecimento.",
+      "Liderança por competência.",
+      "Capacidade analítica.",
+      "Melhoria contínua."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos construídos sobre confiança, respeito e credibilidade. Embora possa parecer mais reservado inicialmente, tende a ganhar influência à medida que demonstra seu conhecimento e consistência.",
+    "tomadaDecisao": "Você toma decisões de forma estruturada e fundamentada. Busca compreender cenários, avaliar riscos e encontrar a melhor solução antes de agir.",
+    "motivadores": [
+      "Qualidade.",
+      "Conhecimento.",
+      "Reconhecimento por competência.",
+      "Organização.",
+      "Crescimento.",
+      "Segurança.",
+      "Resultados."
+    ],
+    "medos": [
+      "Cometer erros.",
+      "Ser injustamente criticado.",
+      "Perder credibilidade.",
+      "Falta de preparo.",
+      "Improvisação excessiva."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais flexível.",
+      "Agir mais rapidamente quando necessário.",
+      "Aceitar melhor a possibilidade de erros.",
+      "Delegar responsabilidades.",
+      "Reduzir o perfeccionismo excessivo."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar o nível de controle, análise e cobrança. Pode tornar-se mais crítico e cauteloso, buscando evitar falhas e preservar a qualidade dos resultados."
+  },
+
+  "DSC": {
+    "codigo": "DSC",
+    "nome": "Dominante Estável Conforme",
+    "titulo": "Dominante Estável Conforme",
+    "descricaoCurta": "Perfil confiável, disciplinado e orientado para resultados consistentes, alcançando objetivos com qualidade e responsabilidade.",
+    "caracteristicas": "Você combina determinação, estabilidade e organização. Costuma ser uma pessoa confiável, disciplinada e orientada para resultados consistentes. Busca alcançar objetivos sem renunciar à qualidade e a responsabilidade.",
+    "potencialidades": [
+      "Liderança equilibrada.",
+      "Planejamento.",
+      "Persistência.",
+      "Organização.",
+      "Confiabilidade.",
+      "Gestão de processos.",
+      "Capacidade de execução."
+    ],
+    "relacoesInterpessoais": "Você tende a construir relacionamentos sólidos e duradouros. Valoriza confiança, compromisso e respeito mútuo. Normalmente prefere relacionamentos profundos a conexões superficiais.",
+    "tomadaDecisao": "Você toma decisões de forma estruturada, considerando riscos, impactos e objetivos. Costuma agir com firmeza, mas sem impulsividade.",
+    "motivadores": [
+      "Segurança.",
+      "Resultados.",
+      "Organização.",
+      "Estabilidade.",
+      "Qualidade.",
+      "Crescimento sustentável.",
+      "Confiança."
+    ],
+    "medos": [
+      "Instabilidade.",
+      "Erros evitáveis.",
+      "Falta de planejamento.",
+      "Perda de controle.",
+      "Ambientes caóticos."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais flexível diante de mudanças.",
+      "Desenvolver maior espontaneidade.",
+      "Assumir riscos calculados com mais frequência.",
+      "Expressar emoções com mais abertura.",
+      "Evitar excesso de cautela."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar seu nível de controle, organização e cobrança. Pode tornar-se mais rígido ou resistente a mudanças. Seu desafio é manter a flexibilidade mesmo em cenários de alta exigência."
+  },
+
+  "DCS": {
+    "codigo": "DCS",
+    "nome": "Dominante Conforme Estável",
+    "titulo": "Dominante Conforme Estável",
+    "descricaoCurta": "Perfil orientado para resultados que valoriza planejamento, qualidade e consistência, evitando improvisações desnecessárias.",
+    "caracteristicas": "Você combina determinação, organização e estabilidade. Costuma ser uma pessoa orientada para resultados, mas que valoriza planejamento, qualidade e consistência. Busca alcançar seus objetivos de forma estruturada, evitando improvisações desnecessárias.",
+    "potencialidades": [
+      "Liderança organizada.",
+      "Planejamento estratégico.",
+      "Capacidade de execução.",
+      "Persistência.",
+      "Confiabilidade.",
+      "Gestão de processos.",
+      "Busca contínua por melhoria."
+    ],
+    "relacoesInterpessoais": "Você tende a construir relacionamentos baseados em confiança, responsabilidade e respeito. Embora possa parecer mais reservado inicialmente, costuma demonstrar lealdade e comprometimento com as pessoas próximas.",
+    "tomadaDecisao": "Você toma decisões com firmeza, mas procura embasá-las em informações concretas. Valoriza a análise dos riscos e a definição de planos claros antes de agir.",
+    "motivadores": [
+      "Resultados.",
+      "Organização.",
+      "Segurança.",
+      "Eficiência.",
+      "Controle.",
+      "Qualidade.",
+      "Crescimento sustentável."
+    ],
+    "medos": [
+      "Falta de controle.",
+      "Erros evitáveis.",
+      "Desorganização.",
+      "Instabilidade.",
+      "Baixo desempenho."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais flexível diante de mudanças.",
+      "Demonstrar mais abertura emocional.",
+      "Delegar responsabilidades com maior confiança.",
+      "Reduzir o excesso de controle.",
+      "Aceitar diferentes formas de realizar uma tarefa."
+    ],
+    "sobPressao": "Sob pressão, você tende a assumir o controle da situação, aumentar a cobrança e concentrar-se ainda mais nos detalhes. Pode tornar-se rígido ou excessivamente exigente na busca por resultados."
+  },
+
+  "SDC": {
+    "codigo": "SDC",
+    "nome": "Estável Dominante Conforme",
+    "titulo": "Estável Dominante Conforme",
+    "descricaoCurta": "Perfil confiável, disciplinado e comprometido que busca segurança, qualidade e resultados consistentes com planejamento.",
+    "caracteristicas": "Você combina estabilidade, determinação e organização. Costuma ser uma pessoa confiável, disciplinada e comprometida. Valoriza segurança, qualidade e resultados consistentes, preferindo agir de forma planejada e responsável.",
+    "potencialidades": [
+      "Organização.",
+      "Planejamento.",
+      "Liderança consistente.",
+      "Confiabilidade.",
+      "Persistência.",
+      "Controle de qualidade.",
+      "Capacidade de execução."
+    ],
+    "relacoesInterpessoais": "Você tende a construir relacionamentos sólidos e duradouros. Valoriza respeito, lealdade e responsabilidade. Costuma ser visto como alguém confiável, equilibrado e comprometido com seus valores.",
+    "tomadaDecisao": "Você toma decisões com cautela, analisando riscos e consequências. Busca segurança nas informações disponíveis e procura agir de forma responsável e sustentável.",
+    "motivadores": [
+      "Segurança.",
+      "Organização.",
+      "Qualidade.",
+      "Estabilidade.",
+      "Planejamento.",
+      "Confiança.",
+      "Resultados consistentes."
+    ],
+    "medos": [
+      "Mudanças bruscas.",
+      "Erros evitáveis.",
+      "Falta de controle.",
+      "Instabilidade.",
+      "Ambientes desorganizados."
+    ],
+    "pontosDesenvolver": [
+      "Desenvolver maior flexibilidade.",
+      "Adaptar-se mais rapidamente a mudanças.",
+      "Assumir riscos calculados quando necessário.",
+      "Evitar excesso de cautela.",
+      "Demonstrar emoções com mais abertura."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar seu nível de controle, organização e cautela. Pode resistir a mudanças e buscar previsibilidade em excesso. Seu desafio é confiar mais em sua capacidade de adaptação."
+  },
+
+  "SCD": {
+    "codigo": "SCD",
+    "nome": "Estável Conforme Dominante",
+    "titulo": "Estável Conforme Dominante",
+    "descricaoCurta": "Perfil que age de forma cuidadosa, responsável e consistente, valorizando segurança e qualidade sem abrir mão de seus objetivos.",
+    "caracteristicas": "Você combina equilíbrio emocional, organização e determinação. Costuma agir de forma cuidadosa, responsável e consistente, valorizando segurança e qualidade sem renunciar aos objetivos que considera importantes.",
+    "potencialidades": [
+      "Planejamento.",
+      "Disciplina.",
+      "Persistência.",
+      "Organização.",
+      "Estabilidade emocional.",
+      "Confiabilidade.",
+      "Capacidade de execução consistente."
+    ],
+    "relacoesInterpessoais": "Você tende a construir relacionamentos sólidos e duradouros. Demonstra respeito, lealdade e responsabilidade. Costuma ser visto como alguém confiável e comprometido com suas palavras e ações.",
+    "tomadaDecisao": "Você prefere analisar cuidadosamente as opções antes de decidir. Quando toma uma decisão, normalmente demonstra firmeza e perseverança para colocá-la em prática.",
+    "motivadores": [
+      "Segurança.",
+      "Estabilidade.",
+      "Organização.",
+      "Qualidade.",
+      "Relacionamentos confiáveis.",
+      "Planejamento.",
+      "Crescimento consistente."
+    ],
+    "medos": [
+      "Mudanças bruscas.",
+      "Conflitos intensos.",
+      "Falhas.",
+      "Instabilidade.",
+      "Falta de previsibilidade."
+    ],
+    "pontosDesenvolver": [
+      "Adaptar-se mais rapidamente a mudanças.",
+      "Assumir riscos calculados com maior frequência.",
+      "Desenvolver maior espontaneidade.",
+      "Evitar excesso de cautela.",
+      "Expressar opiniões difíceis com mais assertividade."
+    ],
+    "sobPressao": "Sob pressão, você tende a buscar ainda mais segurança, planejamento e controle. Pode tornar-se mais reservado e resistente a mudanças inesperadas, procurando preservar a estabilidade do ambiente."
+  },
+
+  "CDS": {
+    "codigo": "CDS",
+    "nome": "Conforme Dominante Estável",
+    "titulo": "Conforme Dominante Estável",
+    "descricaoCurta": "Perfil disciplinado, confiável e orientado para resultados sustentáveis, buscando excelência com segurança e responsabilidade.",
+    "caracteristicas": "Você combina organização, determinação e estabilidade. Costuma ser uma pessoa disciplinada, confiável e orientada para resultados sustentáveis. Busca excelência sem renunciar à segurança e a responsabilidade.",
+    "potencialidades": [
+      "Planejamento estratégico.",
+      "Organização.",
+      "Persistência.",
+      "Confiabilidade.",
+      "Liderança consistente.",
+      "Atenção aos detalhes.",
+      "Gestão eficiente de processos."
+    ],
+    "relacoesInterpessoais": "Você tende a construir relacionamentos sólidos e duradouros. Valoriza lealdade, responsabilidade e respeito mútuo. Prefere conexões profundas e verdadeiras a relacionamentos superficiais.",
+    "tomadaDecisao": "Você toma decisões de forma estruturada, considerando informações, riscos e impactos futuros. Procura agir com firmeza, mas sem impulsividade.",
+    "motivadores": [
+      "Segurança.",
+      "Qualidade.",
+      "Estabilidade.",
+      "Planejamento.",
+      "Organização.",
+      "Confiança.",
+      "Resultados consistentes."
+    ],
+    "medos": [
+      "Instabilidade.",
+      "Falhas evitáveis.",
+      "Ambientes desorganizados.",
+      "Perda de controle.",
+      "Mudanças sem planejamento."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais flexível diante de mudanças.",
+      "Ser mais espontâneo.",
+      "Assumir riscos calculados com mais frequência.",
+      "Reduzir a necessidade excessiva de controle.",
+      "Adaptar-se mais rapidamente a novos cenários."
+    ],
+    "sobPressao": "Sob pressão, você tende a buscar ainda mais controle, organização e previsibilidade. Pode tornar-se mais rígido em suas decisões e resistente a mudanças inesperadas."
+  },
+
+  "CSD": {
+    "codigo": "CSD",
+    "nome": "Conforme Estável Dominante",
+    "titulo": "Conforme Estável Dominante",
+    "descricaoCurta": "Perfil criterioso, confiável e orientado à qualidade, com firmeza para defender seus padrões e objetivos.",
+    "caracteristicas": "Você combina análise, estabilidade e determinação. Costuma ser uma pessoa criteriosa, confiável e orientada para a qualidade. Busca fazer as coisas da maneira correta, mas também possui firmeza para defender seus padrões e objetivos.",
+    "potencialidades": [
+      "Capacidade analítica.",
+      "Organização.",
+      "Disciplina.",
+      "Atenção aos detalhes.",
+      "Persistência.",
+      "Planejamento.",
+      "Confiabilidade."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos construídos sobre respeito, responsabilidade e confiança. Embora possa levar mais tempo para criar proximidade, tende a desenvolver vínculos sólidos e duradouros.",
+    "tomadaDecisao": "Você procura analisar cuidadosamente todas as informações disponíveis antes de agir. Suas decisões geralmente são bem fundamentadas e orientadas para a segurança e a qualidade.",
+    "motivadores": [
+      "Qualidade.",
+      "Segurança.",
+      "Organização.",
+      "Competência.",
+      "Estabilidade.",
+      "Planejamento.",
+      "Melhoria contínua."
+    ],
+    "medos": [
+      "Cometer erros.",
+      "Improvisação excessiva.",
+      "Falta de controle.",
+      "Ambientes caóticos.",
+      "Mudanças sem planejamento."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais flexível.",
+      "Agir com mais rapidez quando necessário.",
+      "Reduzir o perfeccionismo excessivo.",
+      "Assumir riscos calculados.",
+      "Adaptar-se melhor a cenários imprevisíveis."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar seu nível de análise, cautela e controle. Pode tornar-se excessivamente detalhista ou resistente a mudanças, buscando minimizar qualquer possibilidade de erro."
+  },
+
+  "ISC": {
+    "codigo": "ISC",
+    "nome": "Influente Estável Conforme",
+    "titulo": "Influente Estável Conforme",
+    "descricaoCurta": "Perfil amigável, organizado e equilibrado que conecta pessoas e ideias com harmonia, qualidade e responsabilidade.",
+    "caracteristicas": "Você combina comunicação, análise e estabilidade. Costuma ser uma pessoa amigável, organizada e equilibrada, que busca construir relacionamentos positivos sem renunciar à qualidade e a responsabilidade. Tem facilidade para conectar pessoas e ideias de forma harmoniosa.",
+    "potencialidades": [
+      "Comunicação clara e acolhedora.",
+      "Capacidade analítica.",
+      "Organização.",
+      "Trabalho em equipe.",
+      "Construção de relacionamentos duradouros.",
+      "Planejamento.",
+      "Influência positiva."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos saudáveis e costuma demonstrar interesse genuíno pelas pessoas. Procura criar ambientes harmoniosos, onde todos possam colaborar e se desenvolver.",
+    "tomadaDecisao": "Você tende a considerar tanto os aspectos humanos quanto os aspectos técnicos antes de decidir. Busca soluções equilibradas, sustentáveis e que beneficiem o maior número possível de pessoas.",
+    "motivadores": [
+      "Relacionamentos.",
+      "Harmonia.",
+      "Reconhecimento.",
+      "Organização.",
+      "Segurança.",
+      "Cooperação.",
+      "Desenvolvimento pessoal."
+    ],
+    "medos": [
+      "Rejeição.",
+      "Conflitos.",
+      "Falhas.",
+      "Críticas excessivas.",
+      "Quebra de confiança."
+    ],
+    "pontosDesenvolver": [
+      "Desenvolver maior assertividade.",
+      "Evitar excesso de cautela.",
+      "Lidar melhor com críticas.",
+      "Tomar decisões difíceis com mais rapidez.",
+      "Reduzir a necessidade de aprovação."
+    ],
+    "sobPressao": "Sob pressão, você tende a buscar apoio das pessoas e mais informações para agir com segurança. Pode evitar conflitos inicialmente e tornar-se mais preocupado com a opinião dos outros."
+  },
+
+  "ICS": {
+    "codigo": "ICS",
+    "nome": "Influente Conforme Estável",
+    "titulo": "Influente Conforme Estável",
+    "descricaoCurta": "Perfil que combina comunicação, análise e estabilidade, construindo relacionamentos positivos com qualidade e responsabilidade.",
+    "caracteristicas": "Você combina comunicação, análise e estabilidade. Costuma ser uma pessoa amigável, organizada e equilibrada, que busca construir relacionamentos positivos sem renunciar à qualidade e a responsabilidade. Tem facilidade para conectar pessoas e ideias de forma harmoniosa.",
+    "potencialidades": [
+      "Comunicação clara e acolhedora.",
+      "Capacidade analítica.",
+      "Organização.",
+      "Trabalho em equipe.",
+      "Construção de relacionamentos duradouros.",
+      "Planejamento.",
+      "Influência positiva."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos saudáveis e costuma demonstrar interesse genuíno pelas pessoas. Procura criar ambientes harmoniosos, onde todos possam colaborar e se desenvolver.",
+    "tomadaDecisao": "Você tende a considerar tanto os aspectos humanos quanto os aspectos técnicos antes de decidir. Busca soluções equilibradas, sustentáveis e que beneficiem o maior número possível de pessoas.",
+    "motivadores": [
+      "Relacionamentos.",
+      "Harmonia.",
+      "Reconhecimento.",
+      "Organização.",
+      "Segurança.",
+      "Cooperação.",
+      "Desenvolvimento pessoal."
+    ],
+    "medos": [
+      "Rejeição.",
+      "Conflitos.",
+      "Falhas.",
+      "Críticas excessivas.",
+      "Quebra de confiança."
+    ],
+    "pontosDesenvolver": [
+      "Desenvolver maior assertividade.",
+      "Evitar excesso de cautela.",
+      "Lidar melhor com críticas.",
+      "Tomar decisões difíceis com mais rapidez.",
+      "Reduzir a necessidade de aprovação."
+    ],
+    "sobPressao": "Sob pressão, você tende a buscar apoio das pessoas e mais informações para agir com segurança. Pode evitar conflitos inicialmente e tornar-se mais preocupado com a opinião dos outros."
+  },
+
+  "SIC": {
+    "codigo": "SIC",
+    "nome": "Estável Influente Conforme",
+    "titulo": "Estável Influente Conforme",
+    "descricaoCurta": "Perfil equilibrado, acolhedor e responsável que valoriza qualidade, harmonia e relacionamentos saudáveis.",
+    "caracteristicas": "Você combina estabilidade, comunicação e análise. Costuma ser uma pessoa equilibrada, acolhedora e responsável. Valoriza relacionamentos saudáveis, organização e ambientes harmoniosos.",
+    "potencialidades": [
+      "Empatia.",
+      "Organização.",
+      "Comunicação clara.",
+      "Trabalho em equipe.",
+      "Confiabilidade.",
+      "Planejamento.",
+      "Capacidade de apoio."
+    ],
+    "relacoesInterpessoais": "Você procura construir relacionamentos baseados em confiança, respeito e cooperação. Costuma ser visto como alguém acessível, prestativo e comprometido com o bem-estar das pessoas ao seu redor.",
+    "tomadaDecisao": "Você tende a analisar cuidadosamente as situações, considerando tanto os fatos quanto os impactos sobre as pessoas envolvidas. Busca equilíbrio entre segurança, qualidade e relacionamento.",
+    "motivadores": [
+      "Harmonia.",
+      "Segurança.",
+      "Relacionamentos.",
+      "Organização.",
+      "Cooperação.",
+      "Reconhecimento.",
+      "Ambiente estável."
+    ],
+    "medos": [
+      "Conflitos.",
+      "Rejeição.",
+      "Mudanças bruscas.",
+      "Falhas.",
+      "Quebra de confiança."
+    ],
+    "pontosDesenvolver": [
+      "Desenvolver maior assertividade.",
+      "Assumir posições com mais firmeza.",
+      "Reduzir a preocupação excessiva com aprovação.",
+      "Adaptar-se mais rapidamente a mudanças.",
+      "Evitar excesso de cautela."
+    ],
+    "sobPressao": "Sob pressão, você tende a se tornar mais reservado e cauteloso. Pode evitar confrontos e assumir responsabilidades além do necessário para preservar a harmonia. Seu desafio é enfrentar situações difíceis com mais objetividade e confiança."
+  },
+
+  "SCI": {
+    "codigo": "SCI",
+    "nome": "Estável Conforme Influente",
+    "titulo": "Estável Conforme Influente",
+    "descricaoCurta": "Perfil paciente, confiável e observador que valoriza qualidade, estabilidade e cooperação com equilíbrio emocional.",
+    "caracteristicas": "Você combina equilíbrio emocional, organização e habilidade de relacionamento. Costuma ser uma pessoa paciente, confiável e observadora, que valoriza qualidade, estabilidade e cooperação.",
+    "potencialidades": [
+      "Empatia.",
+      "Organização.",
+      "Escuta ativa.",
+      "Planejamento.",
+      "Confiabilidade.",
+      "Relacionamentos sólidos.",
+      "Capacidade de apoio."
+    ],
+    "relacoesInterpessoais": "Você tende a construir vínculos profundos e duradouros. As pessoas costumam sentir segurança ao seu lado, pois você demonstra estabilidade, respeito e interesse genuíno por elas.",
+    "tomadaDecisao": "Você prefere refletir antes de agir. Costuma analisar os fatos com cuidado e considerar o impacto das decisões sobre as pessoas e sobre o ambiente.",
+    "motivadores": [
+      "Segurança.",
+      "Harmonia.",
+      "Relacionamentos.",
+      "Qualidade.",
+      "Cooperação.",
+      "Estabilidade.",
+      "Confiança."
+    ],
+    "medos": [
+      "Conflitos.",
+      "Instabilidade.",
+      "Rejeição.",
+      "Mudanças bruscas.",
+      "Falhas que afetem outras pessoas."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais assertivo.",
+      "Adaptar-se mais rapidamente a mudanças.",
+      "Assumir riscos calculados.",
+      "Posicionar-se com maior firmeza.",
+      "Evitar excesso de acomodação."
+    ],
+    "sobPressao": "Sob pressão, você tende a buscar estabilidade e previsibilidade. Pode tornar-se mais reservado, cauteloso e resistente a mudanças inesperadas, priorizando a preservação dos relacionamentos."
+  },
+
+  "CIS": {
+    "codigo": "CIS",
+    "nome": "Conforme Influente Estável",
+    "titulo": "Conforme Influente Estável",
+    "descricaoCurta": "Perfil organizado, empático e confiável que valoriza qualidade, harmonia e contribui de forma significativa para os outros.",
+    "caracteristicas": "Você combina análise, relacionamento e equilíbrio emocional. Costuma ser uma pessoa organizada, empática e confiável. Valoriza qualidade, harmonia e relacionamentos saudáveis, buscando contribuir de forma significativa para as pessoas ao seu redor.",
+    "potencialidades": [
+      "Comunicação equilibrada.",
+      "Empatia.",
+      "Organização.",
+      "Capacidade de apoio.",
+      "Planejamento.",
+      "Relacionamentos duradouros.",
+      "Confiabilidade."
+    ],
+    "relacoesInterpessoais": "Você tende a construir relacionamentos baseados em confiança, respeito e cooperação. Costuma ouvir com atenção, compreender diferentes perspectivas e criar ambientes acolhedores e seguros.",
+    "tomadaDecisao": "Você procura analisar cuidadosamente as situações antes de decidir. Considera tanto os fatos quanto os impactos emocionais e relacionais de suas escolhas.",
+    "motivadores": [
+      "Harmonia.",
+      "Segurança.",
+      "Relacionamentos.",
+      "Qualidade.",
+      "Cooperação.",
+      "Estabilidade.",
+      "Reconhecimento sincero."
+    ],
+    "medos": [
+      "Conflitos.",
+      "Rejeição.",
+      "Falhas.",
+      "Mudanças bruscas.",
+      "Perda de confiança."
+    ],
+    "pontosDesenvolver": [
+      "Tornar-se mais assertivo.",
+      "Agir com mais rapidez em determinadas situações.",
+      "Evitar excesso de cautela.",
+      "Lidar melhor com críticas e conflitos.",
+      "Reduzir a necessidade de aprovação."
+    ],
+    "sobPressao": "Sob pressão, você tende a se tornar mais reservado, cauteloso e preocupado em manter a estabilidade dos relacionamentos. Pode evitar confrontos e assumir responsabilidades além do necessário para preservar a harmonia."
+  },
+
+  "CSI": {
+    "codigo": "CSI",
+    "nome": "Conforme Estável Influente",
+    "titulo": "Conforme Estável Influente",
+    "descricaoCurta": "Perfil responsável, equilibrado e confiável que busca qualidade em tudo sem perder a capacidade de construir bons relacionamentos.",
+    "caracteristicas": "Você combina análise, estabilidade e comunicação. Costuma ser uma pessoa responsável, equilibrada e confiável, que busca qualidade em tudo o que faz sem perder a capacidade de construir bons relacionamentos.",
+    "potencialidades": [
+      "Atenção aos detalhes.",
+      "Organização.",
+      "Equilíbrio emocional.",
+      "Comunicação respeitosa.",
+      "Planejamento.",
+      "Confiabilidade.",
+      "Capacidade de orientação e suporte."
+    ],
+    "relacoesInterpessoais": "Você valoriza relacionamentos baseados em confiança, respeito e lealdade. Costuma ser um bom ouvinte e procura compreender as pessoas antes de emitir julgamentos.",
+    "tomadaDecisao": "Você tende a tomar decisões de forma cautelosa e fundamentada. Busca reunir informações suficientes antes de agir, avaliando riscos, consequências e impactos sobre as pessoas.",
+    "motivadores": [
+      "Segurança.",
+      "Qualidade.",
+      "Organização.",
+      "Harmonia.",
+      "Relacionamentos saudáveis.",
+      "Planejamento.",
+      "Estabilidade."
+    ],
+    "medos": [
+      "Erros.",
+      "Conflitos.",
+      "Instabilidade.",
+      "Falta de preparo.",
+      "Perda de confiança."
+    ],
+    "pontosDesenvolver": [
+      "Agir com mais rapidez em algumas situações.",
+      "Reduzir o perfeccionismo excessivo.",
+      "Desenvolver maior flexibilidade.",
+      "Assumir mais riscos calculados.",
+      "Posicionar-se com maior firmeza diante de conflitos."
+    ],
+    "sobPressao": "Sob pressão, você tende a aumentar o nível de análise, cautela e preocupação com a qualidade das decisões. Pode evitar confrontos diretos e buscar manter a estabilidade do ambiente a qualquer custo."
   }
 }
