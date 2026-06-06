@@ -1,195 +1,234 @@
 /* ══════════════════════════════════════════════════════
-   reports.js — DISC Platform
+   reports.js — DISC Platform — FASE 2 (pós-correção)
    ─────────────────────────────────────────────────────
-   RESPONSABILIDADE: exibição de resultados e exportação.
-     • showResults()      — renderiza resultado na tela
-     • shareResult()      — copia link público como hiperlink
-     • checkPublicShare() — detecta ?share= na URL
-     • buildPdfHTML()     — monta HTML estático do relatório
-     • downloadPDF()      — captura canvas e salva o PDF
+   CORREÇÕES APLICADAS:
+     1. Cores individuais por fator DISC no nome do perfil
+        (cada letra usa sua própria cor: D=vermelho,
+         I=amarelo, S=verde, C=azul)
+     2. Remoção do badge "Perfil Secundário" (tela + PDF)
+     3. Seção "Medos" adicionada na tela de resultado
+     4. PDF: rótulo corrigido (sem referências a fatores
+        isolados), texto limpo
+     5. PDF: paginação automática corrigida — nenhuma
+        seção é cortada, funciona para triplos longos
 
-   DEPENDE DE (carregado antes):
-     disc-engine.js → profileData, combos, DISC_COLORS,
-                       DISC_DARK, DISC_NAMES
-     globals.js     → MockDB, lastResult, showScreen,
-                       showToast, getBaseURL
-
-   EXPÕE (chamadas do HTML via onclick):
-     showResults(r, targetScreen)
-     shareResult()
-     checkPublicShare()
-     downloadPDF()
-
-   ⚠  SEM 'use strict' — necessário para acessar globais.
+   NÃO ALTERADO:
+     Algoritmo DISC, cálculos, ProfileService, JSON.
 ══════════════════════════════════════════════════════ */
 
 /* ════════════════════════════════════════════════════
+   _coloredName
+   Recebe sd.nome (ex: "Estável Dominante") e
+   profileCodes (ex: ["S","D"]) e retorna HTML com
+   cada palavra na cor do seu fator correspondente.
+
+   Regra: a ordem dos nomes no sd.nome segue a ordem
+   dos fatores em profileCodes (1º fator = 1ª palavra).
+   Para perfis simples, a cor é simplesmente DISC_COLORS[pk].
+════════════════════════════════════════════════════ */
+function _coloredName(sd, profileCodes) {
+  if (!profileCodes || profileCodes.length <= 1) {
+    /* Perfil simples — cor única */
+    var pk = profileCodes ? profileCodes[0] : 'D';
+    return '<span style="color:' + DISC_COLORS[pk] + '">' + sd.nome + '</span>';
+  }
+
+  /* Perfis duplos e triplos — cada palavra na cor do seu fator */
+  var words = sd.nome.split(/\s+/);
+  return words.map(function (word, idx) {
+    var code  = profileCodes[idx] || profileCodes[profileCodes.length - 1];
+    var color = DISC_COLORS[code] || DISC_COLORS[profileCodes[0]];
+    return '<span style="color:' + color + ';font-weight:700;">' + word + '</span>';
+  }).join(' ');
+}
+
+/* Versão do _coloredName para HTML inline (PDF / texto plano) */
+function _coloredNameInline(nome, profileCodes, fontSize, extraStyle) {
+  fontSize   = fontSize   || '26px';
+  extraStyle = extraStyle || '';
+  if (!profileCodes || profileCodes.length <= 1) {
+    var pk = profileCodes ? profileCodes[0] : 'D';
+    return '<span style="font-family:Arial,sans-serif;font-size:' + fontSize + ';' +
+      'font-weight:700;color:' + DISC_COLORS[pk] + ';' + extraStyle + '">' + nome + '</span>';
+  }
+  var words = nome.split(/\s+/);
+  return words.map(function (word, idx) {
+    var code  = profileCodes[idx] || profileCodes[profileCodes.length - 1];
+    var color = DISC_COLORS[code] || DISC_COLORS[profileCodes[0]];
+    return '<span style="font-family:Arial,sans-serif;font-size:' + fontSize + ';' +
+      'font-weight:700;color:' + color + ';' + extraStyle + '">' + word + '</span>';
+  }).join(' ');
+}
+
+/* ════════════════════════════════════════════════════
    EXIBIR RESULTADO — tela privada e pública
-   targetScreen: 'screen-result' | 'screen-public'
-   Prefixo de IDs:
-     tela privada → 'res-'
-     tela pública → 'pub-'
 ════════════════════════════════════════════════════ */
 function showResults(r, targetScreen) {
   showScreen(targetScreen);
   window.scrollTo(0, 0);
 
-  var isPublic = targetScreen === 'screen-public';
-  var prefix   = isPublic ? 'pub' : 'res';
+  var isPublic     = targetScreen === 'screen-public';
+  var prefix       = isPublic ? 'pub' : 'res';
+  var profileCode  = r.profileCode  || r.primaryKey || '';
+  var profileCodes = r.profileCodes || [r.primaryKey];
+  var pk           = r.primaryKey   || profileCodes[0];
+  var scores       = r.scores       || {};
 
-  /* ── Leitura do resultado — suporta multi-perfil v9 ── */
-  var pk           = r.primaryKey;
-  var profileCodes = r.profileCodes || [pk];   /* ['S','C'] ou ['D'] etc. */
-  var profileCode  = r.profileCode  || pk;     /* 'SC', 'DIS', 'D' etc.  */
-  var hasSecondary = r.hasSecondary || false;
-  var pcts         = r.pcts   || {};
-  var scores       = r.scores || {};
+  /* Barras são síncronas — não dependem do JSON */
+  _renderBars(prefix, scores);
 
-  var data  = profileData[pk];
-  /* Busca combo pelo código completo (ex: 'SC', 'DIS') */
-  var combo = combos[profileCode] || null;
+  ProfileService.getProfileForResult(r)
+    .then(function (profile) {
+      var sd = ProfileService.buildScreenData(profile);
+      _renderHeader(prefix, sd, profileCode, profileCodes, pk);
+      _renderDescription(prefix, sd, profileCodes);
+      _renderCards(prefix, sd);
+    })
+    .catch(function (err) {
+      console.error('[showResults]', err);
+      var el = document.getElementById(prefix + '-name');
+      if (el) el.textContent = 'Perfil ' + profileCode;
+    });
+}
 
-  /* Sigla entre parênteses: (S), (SC), (DIS) */
-  var siglaSpan = function(color) {
-    return '<span style="font-size:.5em;font-weight:700;color:' + color + ';opacity:.7;' +
-           'letter-spacing:.04em;vertical-align:middle;margin-left:7px;">(' + profileCode + ')</span>';
-  };
-
-  /* ── Nome principal com todos os fatores coloridos ── */
+/* ────────────────────────────────────────────────────
+   _renderHeader
+   CORREÇÃO: cores individuais por fator
+   CORREÇÃO: badge de perfil secundário REMOVIDO
+──────────────────────────────────────────────────── */
+function _renderHeader(prefix, sd, profileCode, profileCodes, pk) {
   var nameEl = document.getElementById(prefix + '-name');
-  if (combo) {
-    /* Nome colorido do fator principal + sigla + nome do combo abaixo */
-    nameEl.innerHTML =
-      '<span style="color:' + DISC_COLORS[pk] + '">' +
-        data.name + siglaSpan(DISC_COLORS[pk]) +
-      '</span>' +
-      '<span style="font-size:.44em;font-weight:500;color:var(--text2);' +
-        'display:block;margin-top:5px;letter-spacing:.02em;">' +
-        combo.name +
-      '</span>';
-  } else {
-    /* Perfil simples */
-    nameEl.innerHTML =
-      '<span style="color:' + DISC_COLORS[pk] + '">Perfil ' + data.name +
-        siglaSpan(DISC_COLORS[pk]) +
-      '</span>';
+  if (nameEl) {
+    /* Código entre parênteses na cor do fator principal */
+    var sigla =
+      ' <span style="font-size:.5em;font-weight:700;color:' + DISC_COLORS[pk] +
+      ';opacity:.65;letter-spacing:.04em;vertical-align:middle;">' +
+      '(' + profileCode + ')</span>';
+
+    /* Nome com cores individuais por fator */
+    nameEl.innerHTML = _coloredName(sd, profileCodes) + sigla;
   }
 
-  document.getElementById(prefix + '-tagline').textContent =
-    combo ? combo.tagline : data.tagline;
+  var tagEl = document.getElementById(prefix + '-tagline');
+  if (tagEl) tagEl.textContent = sd.descricaoCurta || '';
 
-  /* ── Badge de perfis adicionais (2º, 3º fatores) ── */
+  /* Badge de perfil secundário: garantir oculto (foi removido do HTML,
+     mas se ainda existir no DOM por qualquer motivo, esconde) */
   var secBadge = document.getElementById(prefix + '-sec-badge');
-  if (profileCodes.length >= 2) {
-    secBadge.classList.remove('hidden');
-    var sn = document.getElementById(prefix + '-sec-name');
-    /* Exibe todos os fatores >= threshold com suas cores */
-    var extraNames = profileCodes.slice(1).map(function(code) {
-      return '<span style="color:' + DISC_COLORS[code] + ';font-weight:700;margin:0 3px;">' +
-        profileData[code].name + ' (' + code + ')' +
-      '</span>';
-    });
-    sn.innerHTML  = extraNames.join('<span style="color:var(--text3);margin:0 4px;">+</span>');
-    sn.style.color = '';
-  } else {
-    secBadge.classList.add('hidden');
+  if (secBadge) secBadge.classList.add('hidden');
+}
+
+/* ────────────────────────────────────────────────────
+   _renderDescription
+──────────────────────────────────────────────────── */
+function _renderDescription(prefix, sd, profileCodes) {
+  var titleEl = document.getElementById(prefix + '-desc-title');
+  var bodyEl  = document.getElementById(prefix + '-desc-body');
+
+  if (titleEl) {
+    titleEl.textContent = profileCodes.length >= 2
+      ? 'Sobre o Perfil ' + sd.codigo
+      : 'Sobre o Perfil ' + sd.titulo;
   }
 
-  /* ── Descrição do perfil principal ── */
-  var descTitle = document.getElementById(prefix + '-desc-title');
-  var descBody  = document.getElementById(prefix + '-desc-body');
-  if (descTitle) {
-    descTitle.textContent = profileCodes.length >= 2
-      ? profileCodes.map(function(c) { return profileData[c].name; }).join(' + ')
-      : 'Sobre o perfil ' + data.name;
-  }
-  if (descBody) {
-    /* Exibe descrição do fator principal + dos demais se multiperfil */
-    var descParts = profileCodes.map(function(code) {
-      return profileData[code].description.map(function(p) {
-        return '<p>' + p + '</p>';
-      }).join('');
-    });
-    descBody.innerHTML = descParts.join(
-      '<hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">'
-    );
-  }
+  if (bodyEl) {
+    var paragrafos = [];
+    if (sd.caracteristicas       && sd.caracteristicas.trim())
+      paragrafos.push(sd.caracteristicas);
+    if (sd.relacoesInterpessoais && sd.relacoesInterpessoais.trim())
+      paragrafos.push('<strong>Relações Interpessoais:</strong> ' + sd.relacoesInterpessoais);
+    if (sd.tomadaDecisao         && sd.tomadaDecisao.trim())
+      paragrafos.push('<strong>Tomada de Decisão:</strong> ' + sd.tomadaDecisao);
+    if (sd.sobPressao            && sd.sobPressao.trim())
+      paragrafos.push('<strong>Sob Pressão:</strong> ' + sd.sobPressao);
 
-  /* Cards de características */
-  var lists = [
-    [prefix + '-strengths',     data.strengths],
-    [prefix + '-develop',       data.develop],
-    [prefix + '-communication', data.communication],
-    [prefix + '-environment',   data.environment]
+    bodyEl.innerHTML = paragrafos
+      .map(function (p) { return '<p>' + p + '</p>'; })
+      .join('');
+  }
+}
+
+/* ────────────────────────────────────────────────────
+   _renderCards
+   CORREÇÃO: adicionado card Medos (res-medos / pub-medos)
+──────────────────────────────────────────────────── */
+function _renderCards(prefix, sd) {
+  var pairs = [
+    [prefix + '-strengths',     sd.strengths],
+    [prefix + '-develop',       sd.develop],
+    [prefix + '-communication', sd.communication],
+    [prefix + '-environment',   sd.environment],
+    [prefix + '-medos',         sd.medos]        /* ← NOVO */
   ];
-  lists.forEach(function(pair) {
+  pairs.forEach(function (pair) {
     var el = document.getElementById(pair[0]);
-    if (el) el.innerHTML = pair[1].map(function(t) { return '<li>' + t + '</li>'; }).join('');
+    if (el) {
+      el.innerHTML = (pair[1] || []).map(function (t) {
+        return '<li>' + t + '</li>';
+      }).join('');
+    }
   });
+}
 
-  /* ── BUG 4,5 CORRIGIDO: barras mostram pontos reais (escala 80 pts = 100%)
-     A barra é proporcional ao máximo de um perfil (80 pts).
-     O label exibe "X pts" em vez de "X%" — padrão oficial 200 pts. ── */
+/* ────────────────────────────────────────────────────
+   _renderBars — barras de pontuação (síncronas)
+──────────────────────────────────────────────────── */
+function _renderBars(prefix, scores) {
   var barPre = prefix === 'pub' ? 'pub-bar-' : 'bar-';
   var pctPre = prefix === 'pub' ? 'pub-pct-' : 'pct-';
-  var MAX_SCORE_PER = 80; /* máximo por perfil na escala 200 pts */
+  var MAX    = 80;
 
-  ['d','i','s','c'].forEach(function(k) {
+  ['d','i','s','c'].forEach(function (k) {
     var b = document.getElementById(barPre + k);
     var p = document.getElementById(pctPre + k);
-    if (b) b.style.width  = '0%';
-    if (p) p.textContent  = '0 pts';
+    if (b) b.style.width = '0%';
+    if (p) p.textContent = '0 pts';
   });
 
   var reflow = document.getElementById(barPre + 'd');
   if (reflow) void reflow.offsetWidth;
 
-  setTimeout(function() {
-    ['D','I','S','C'].forEach(function(k) {
-      var key   = k.toLowerCase();
-      var barEl = document.getElementById(barPre + key);
-      var pctEl = document.getElementById(pctPre + key);
-      /* Usa scores (pts reais) para o valor; pcts para a largura visual */
-      var pts   = (scores && scores[k] !== undefined) ? scores[k] : (pcts[k] || 0);
-      var width = Math.round((pts / MAX_SCORE_PER) * 100);
-      if (barEl) barEl.style.width  = width + '%';
-      if (pctEl) pctEl.textContent  = pts + ' pts';
+  setTimeout(function () {
+    ['D','I','S','C'].forEach(function (k) {
+      var barEl = document.getElementById(barPre + k.toLowerCase());
+      var pctEl = document.getElementById(pctPre + k.toLowerCase());
+      var pts   = (scores && scores[k] !== undefined) ? scores[k] : 0;
+      if (barEl) barEl.style.width = Math.round((pts / MAX) * 100) + '%';
+      if (pctEl) pctEl.textContent = pts + ' pts';
     });
   }, 80);
 }
 
 /* ════════════════════════════════════════════════════
-   COMPARTILHAR RESULTADO — link público como hiperlink
+   COMPARTILHAR RESULTADO
 ════════════════════════════════════════════════════ */
 function shareResult() {
   if (!lastResult) return;
-  var url              = getBaseURL() + '?share=' + lastResult.shareId;
-  var participantName  = lastResult.name || 'Participante';
-  var htmlLink =
+  var url  = getBaseURL() + '?share=' + lastResult.shareId;
+  var name = lastResult.name || 'Participante';
+  var html =
     '<a href="' + url + '" target="_blank" ' +
     'style="color:#2ECC71;text-decoration:underline;font-family:Arial,sans-serif;font-size:14px;">' +
-    'Visualizar Relatório DISC — ' + participantName + '</a>';
+    'Visualizar Relatório DISC — ' + name + '</a>';
 
   if (navigator.clipboard && window.ClipboardItem) {
-    var item = new ClipboardItem({
-      'text/plain': new Blob([url],      { type: 'text/plain' }),
-      'text/html':  new Blob([htmlLink], { type: 'text/html'  })
-    });
-    navigator.clipboard.write([item])
-      .then(function()  { showToast('✓ Link do relatório copiado! Cole num e-mail para ter o hiperlink clicável.'); })
-      .catch(function() { _shareResultFallback(url); });
+    navigator.clipboard.write([new ClipboardItem({
+      'text/plain': new Blob([url],  { type: 'text/plain' }),
+      'text/html':  new Blob([html], { type: 'text/html'  })
+    })])
+    .then(function ()  { showToast('✓ Link do relatório copiado!'); })
+    .catch(function () { _shareFallback(url); });
   } else {
-    _shareResultFallback(url);
+    _shareFallback(url);
   }
 }
 
-function _shareResultFallback(url) {
+function _shareFallback(url) {
   navigator.clipboard.writeText(url)
-    .then(function()  { showToast('✓ Link copiado!'); })
-    .catch(function() { prompt('Copie o link abaixo:', url); });
+    .then(function ()  { showToast('✓ Link copiado!'); })
+    .catch(function () { prompt('Copie o link:', url); });
 }
 
-/* Detecta ?share=ID e exibe o resultado público */
 function checkPublicShare() {
   var params = new URLSearchParams(window.location.search);
   var sid    = params.get('share');
@@ -201,299 +240,351 @@ function checkPublicShare() {
 }
 
 /* ════════════════════════════════════════════════════
-   EXPORTAR PDF — html2canvas + jsPDF
-   buildPdfHTML: monta o HTML estático do relatório
-   downloadPDF:  renderiza, pagina e salva o arquivo
+   buildPdfHTML — monta o HTML estático do relatório
+   CORREÇÕES APLICADAS:
+     1. Rótulo do perfil: apenas nome colorido + código.
+        SEM "secBlock" (fatores individuais extras).
+        SEM sd.titulo como subtítulo extra.
+        Estrutura final:
+          PERFIL SD
+          ESTÁVEL DOMINANTE   (palavras coloridas)
+          (descrição curta)
+     2. Cores individuais por fator no nome
+     3. Seção Medos incluída nas seções do PDF
 ════════════════════════════════════════════════════ */
-function buildPdfHTML(r) {
+function buildPdfHTML(r, profile) {
   var pk           = r.primaryKey;
-  var sk           = r.secondaryKey;
-  var hasSecondary = r.hasSecondary;
   var scores       = r.scores;
   var name         = r.name;
   var date         = r.date;
-
-  /* ── Dados do perfil — multi-perfil v9 ── */
-  var profileCodes = r.profileCodes || [pk];
   var profileCode  = r.profileCode  || pk;
-  var data         = profileData[pk];
-  var combo        = combos[profileCode] || null;
+  var profileCodes = r.profileCodes || [pk];
 
-  /* Rótulo principal: nome do fator + sigla completa + nome do combo */
-  var label =
-    '<span style="font-family:Arial,sans-serif;font-size:28px;font-weight:700;' +
-    'color:' + DISC_COLORS[pk] + ';line-height:1.15;">' +
-      data.name +
-      '<span style="font-size:17px;font-weight:700;color:' + DISC_COLORS[pk] + ';' +
-        'opacity:.6;margin-left:9px;">(' + profileCode + ')</span>' +
-    '</span>' +
-    (combo
-      ? '<div style="font-family:Arial,sans-serif;font-size:13px;font-weight:600;' +
-          'color:#888;margin-top:5px;">' + combo.name + '</div>'
-      : '');
+  var sd = ProfileService.buildPdfData(profile, r);
 
-  var tag = combo ? combo.tagline : data.tagline;
+  /* ── Kicker "PERFIL SD" ── */
+  var kickerHTML =
+    '<div style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;' +
+    'letter-spacing:.2em;text-transform:uppercase;color:#888;margin-bottom:8px;">' +
+    'PERFIL ' + profileCode + '</div>';
 
-  /* Bloco dos fatores adicionais (2º, 3º, 4º) */
-  var secBlock = profileCodes.length >= 2
-    ? profileCodes.slice(1).map(function(code) {
-        return '<span style="font-family:Arial,sans-serif;font-size:18px;' +
-          'color:#bbb;font-weight:300;margin:0 8px;">+</span>' +
-          '<span style="font-family:Arial,sans-serif;font-size:20px;font-weight:700;' +
-            'color:' + DISC_COLORS[code] + ';">' +
-            profileData[code].name +
-            '<span style="font-size:13px;opacity:.6;margin-left:6px;">(' + code + ')</span>' +
-          '</span>';
-      }).join('')
+  /* ── Nome colorido por fator ── */
+  var nomeColorido = _coloredNameInline(sd.nome, profileCodes, '28px', 'line-height:1.2;');
+
+  /* ── Descrição curta ── */
+  var tagHTML = sd.descricaoCurta
+    ? '<div style="font-family:Arial,sans-serif;font-size:13px;color:#555;' +
+      'font-style:italic;margin-top:8px;">' + sd.descricaoCurta + '</div>'
     : '';
 
-  /* ════════════════════════════════════════════════
-     GRÁFICO PDF — v7 CORRIGIDO
-     Baseado no modelo visual de referência:
-       - Barras nascem SOBRE o eixo horizontal (base)
-       - Crescem PARA CIMA proporcionalmente
-       - Eixo Y com linhas de grade à esquerda
-       - Labels ABAIXO do eixo: Letra → Nome → Pts
-       - Pontuação NÃO duplicada (sem valor no topo da barra)
-       - Fundo cinza claro, barras coloridas DISC
-     Escala: 0 a 80 pts (máximo por perfil na escala 200 pts)
-  ════════════════════════════════════════════════ */
+  /* ── Gráfico de barras ── */
+  var PDF_MAX = 80, CHART_H = 180, BAR_W = 110, BAR_GAP = 10;
+  var PAD_L = 44, PAD_R = 8, LABEL_H = 58;
+  var TOTAL_W = PAD_L + 4 * BAR_W + 3 * BAR_GAP + PAD_R;
+  var TOTAL_H = CHART_H + LABEL_H;
 
-  /* ── Dimensões do gráfico (sem números mágicos) ── */
-  var PDF_MAX_SCORE  = 80;   /* pts máximos por perfil                 */
-  var CHART_H        = 180;  /* altura da área de barras em px         */
-  var CHART_BAR_W    = 110;  /* largura de cada barra                  */
-  var CHART_BAR_GAP  = 10;   /* espaço entre barras                    */
-  var CHART_LEFT_PAD = 44;   /* espaço para eixo Y (números + linha)   */
-  var CHART_RIGHT_PAD= 8;    /* margem direita                         */
-  var CHART_LABEL_H  = 56;   /* altura da área de labels abaixo do eixo*/
-  var CHART_TOTAL_W  = CHART_LEFT_PAD + 4 * CHART_BAR_W + 3 * CHART_BAR_GAP + CHART_RIGHT_PAD;
-  var CHART_TOTAL_H  = CHART_H + CHART_LABEL_H + 4; /* +4 = espessura do eixo */
-
-  /* ── Linhas de grade horizontais (eixo Y) ── */
-  var yTicks = [0, 20, 40, 60, 80];
-  var gridHTML = yTicks.map(function(val) {
-    /* bottom relativo à área de barras */
-    var bottomPx = Math.round((val / PDF_MAX_SCORE) * CHART_H);
-    var isBase   = val === 0;
+  var gridHTML = [0,20,40,60,80].map(function (val) {
+    var bot = Math.round((val / PDF_MAX) * CHART_H);
     return (
-      /* Número do eixo Y */
-      '<div style="position:absolute;' +
-        'left:0;width:' + (CHART_LEFT_PAD - 4) + 'px;' +
-        'bottom:' + bottomPx + 'px;' +
-        'text-align:right;' +
-        'font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#777;' +
-        'line-height:1;transform:translateY(50%);">' + val + '</div>' +
-      /* Linha horizontal */
-      '<div style="position:absolute;' +
-        'left:' + CHART_LEFT_PAD + 'px;right:' + CHART_RIGHT_PAD + 'px;' +
-        'bottom:' + bottomPx + 'px;height:' + (isBase ? '2' : '1') + 'px;' +
-        'background:' + (isBase ? '#222' : '#dde2e8') + ';"></div>'
+      '<div style="position:absolute;left:0;width:' + (PAD_L-4) + 'px;bottom:' + bot + 'px;' +
+        'text-align:right;font-family:Arial,sans-serif;font-size:8px;font-weight:700;' +
+        'color:#777;line-height:1;transform:translateY(50%);">' + val + '</div>' +
+      '<div style="position:absolute;left:' + PAD_L + 'px;right:' + PAD_R + 'px;' +
+        'bottom:' + bot + 'px;height:' + (val===0?2:1) + 'px;' +
+        'background:' + (val===0?'#222':'#dde2e8') + ';"></div>'
     );
   }).join('');
 
-  /* ── Barras coloridas ── */
-  var barsHTML = ['D','I','S','C'].map(function(k, ki) {
-    var pts   = scores[k] || 0;
-    /* Altura proporcional: height = (pts / 80) * CHART_H */
-    var barH  = Math.round((pts / PDF_MAX_SCORE) * CHART_H);
-    /* Posição horizontal da barra */
-    var leftPx = CHART_LEFT_PAD + ki * (CHART_BAR_W + CHART_BAR_GAP);
-
+  var barsHTML = ['D','I','S','C'].map(function (k, ki) {
+    var pts  = scores[k] || 0;
+    var barH = Math.round((pts / PDF_MAX) * CHART_H);
+    var lx   = PAD_L + ki * (BAR_W + BAR_GAP);
     return (
-      /* Fundo cinza (coluna vazia) — nasce da base (bottom:0) até o topo */
-      '<div style="position:absolute;' +
-        'left:' + leftPx + 'px;width:' + CHART_BAR_W + 'px;' +
-        'bottom:0;height:' + CHART_H + 'px;' +
-        'background:#f0f0f0;border-radius:3px 3px 0 0;"></div>' +
-
-      /* Barra colorida — começa na base (bottom:0) e sobe barH px */
-      '<div style="position:absolute;' +
-        'left:' + leftPx + 'px;width:' + CHART_BAR_W + 'px;' +
-        'bottom:0;height:' + barH + 'px;' +
-        'background:' + DISC_COLORS[k] + ';' +
-        'border-radius:' + (barH > 6 ? '3px 3px 0 0' : '1px 1px 0 0') + ';"></div>'
+      '<div style="position:absolute;left:' + lx + 'px;width:' + BAR_W + 'px;' +
+        'bottom:0;height:' + CHART_H + 'px;background:#f0f0f0;border-radius:3px 3px 0 0;"></div>' +
+      '<div style="position:absolute;left:' + lx + 'px;width:' + BAR_W + 'px;' +
+        'bottom:0;height:' + Math.max(barH,2) + 'px;background:' + DISC_COLORS[k] + ';' +
+        'border-radius:' + (barH>6?'3px 3px 0 0':'1px 1px 0 0') + ';"></div>'
     );
   }).join('');
 
-  /* ── Labels abaixo do eixo (letra, nome, pts) ── */
-  var labelsHTML = ['D','I','S','C'].map(function(k, ki) {
-    var pts    = scores[k] || 0;
-    var leftPx = CHART_LEFT_PAD + ki * (CHART_BAR_W + CHART_BAR_GAP);
+  var labelsHTML = ['D','I','S','C'].map(function (k, ki) {
+    var pts = scores[k] || 0;
+    var lx  = PAD_L + ki * (BAR_W + BAR_GAP);
     return (
-      '<div style="position:absolute;' +
-        'left:' + leftPx + 'px;width:' + CHART_BAR_W + 'px;' +
-        'top:' + (CHART_H + 6) + 'px;' +
-        'text-align:center;">' +
-        /* Letra DISC em cor */
+      '<div style="position:absolute;left:' + lx + 'px;width:' + BAR_W + 'px;' +
+        'top:' + (CHART_H + 6) + 'px;text-align:center;">' +
         '<div style="font-family:Arial,sans-serif;font-size:15px;font-weight:800;' +
           'color:' + DISC_COLORS[k] + ';line-height:1.2;">' + k + '</div>' +
-        /* Nome por extenso */
-        '<div style="font-family:Arial,sans-serif;font-size:8px;' +
-          'color:#666;margin-top:1px;line-height:1.3;">' + DISC_NAMES[k] + '</div>' +
-        /* Pontuação — única aparição, clara e destacada */
+        '<div style="font-family:Arial,sans-serif;font-size:8px;color:#666;margin-top:1px;">' +
+          DISC_NAMES[k] + '</div>' +
         '<div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;' +
           'color:' + DISC_DARK[k] + ';margin-top:3px;">' + pts + ' pts</div>' +
       '</div>'
     );
   }).join('');
 
-  /* ── Container principal (position:relative) ── */
   var chartHTML =
-    '<div style="position:relative;' +
-      'width:' + CHART_TOTAL_W + 'px;' +
-      'height:' + CHART_TOTAL_H + 'px;' +
-      'margin:0 auto;">' +
-      /* Área das barras (position:relative para os filhos absolute) */
-      '<div style="position:absolute;' +
-        'left:0;right:0;top:0;height:' + CHART_H + 'px;">' +
+    '<div style="position:relative;width:' + TOTAL_W + 'px;height:' + TOTAL_H + 'px;margin:0 auto;">' +
+      '<div style="position:absolute;left:0;right:0;top:0;height:' + CHART_H + 'px;">' +
         gridHTML + barsHTML +
       '</div>' +
-      /* Área dos labels (abaixo do eixo) */
-      '<div style="position:absolute;' +
-        'left:0;right:0;top:0;height:' + CHART_TOTAL_H + 'px;pointer-events:none;">' +
-        labelsHTML +
-      '</div>' +
+      '<div style="position:absolute;left:0;right:0;top:0;height:' + TOTAL_H + 'px;' +
+        'pointer-events:none;">' + labelsHTML + '</div>' +
     '</div>';
 
-  var li = function(items) {
-    return items.map(function(t) {
+  /* ── Helpers de renderização ── */
+  var secTitleHTML = function (t) {
+    return '<div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;' +
+      'letter-spacing:.15em;text-transform:uppercase;color:#444;' +
+      'margin-bottom:10px;padding-bottom:5px;border-bottom:1.5px solid #e0e0e0;">' + t + '</div>';
+  };
+
+  var liHTML = function (items) {
+    return (items || []).map(function (t) {
       return '<tr>' +
-        '<td style="font-family:Arial,sans-serif;font-size:11px;color:#333;padding:4px 0;border-bottom:1px solid #f0f0f0;vertical-align:top;width:14px;">' +
-          '<span style="font-weight:700;font-size:13px;color:#aaa;">›</span>' +
-        '</td>' +
-        '<td style="font-family:Arial,sans-serif;font-size:11px;color:#333;padding:4px 0 4px 4px;border-bottom:1px solid #f0f0f0;line-height:1.5;">' + t + '</td>' +
-      '</tr>';
+        '<td style="font-family:Arial,sans-serif;font-size:11px;padding:4px 0;' +
+          'border-bottom:1px solid #f0f0f0;vertical-align:top;width:14px;">' +
+          '<span style="font-weight:700;font-size:13px;color:#aaa;">›</span></td>' +
+        '<td style="font-family:Arial,sans-serif;font-size:11px;color:#333;' +
+          'padding:4px 0 4px 5px;border-bottom:1px solid #f0f0f0;line-height:1.55;">' +
+          t + '</td></tr>';
     }).join('');
   };
 
-  var card = function(title, items) {
-    return '<div style="border:1.5px solid #e0e0e0;border-radius:6px;padding:14px 16px;background:#fff;">' +
-      '<div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#444;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid #eee;">' + title + '</div>' +
-      '<table style="width:100%;border-collapse:collapse;">' + li(items) + '</table>' +
+  var cardHTML = function (title, items) {
+    if (!items || items.length === 0) return '';
+    return '<div style="border:1.5px solid #e0e0e0;border-radius:6px;' +
+      'padding:13px 15px;background:#fff;margin-bottom:12px;">' +
+      '<div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;' +
+        'letter-spacing:.12em;text-transform:uppercase;color:#444;' +
+        'margin-bottom:9px;padding-bottom:5px;border-bottom:1.5px solid #eee;">' +
+        title + '</div>' +
+      '<table style="width:100%;border-collapse:collapse;">' + liHTML(items) + '</table>' +
     '</div>';
   };
 
-  var descHTML = data.description.map(function(p) {
-    return '<p style="font-family:Arial,sans-serif;font-size:12px;color:#333;line-height:1.8;margin:0 0 8px 0;">' + p + '</p>';
-  }).join('');
-
-  var secTitle = function(t) {
-    return '<div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#444;margin-bottom:12px;padding-bottom:5px;border-bottom:1.5px solid #e0e0e0;">' + t + '</div>';
+  var textoHTML = function (titulo, texto) {
+    if (!texto || !texto.trim()) return '';
+    return '<div style="margin-bottom:12px;">' +
+      secTitleHTML(titulo) +
+      '<div style="padding:13px 17px;background:#f7f7f7;border-radius:6px;' +
+        'border-left:4px solid ' + DISC_COLORS[pk] + ';">' +
+        '<p style="font-family:Arial,sans-serif;font-size:11.5px;color:#333;' +
+          'line-height:1.75;margin:0;">' + texto + '</p>' +
+      '</div></div>';
   };
 
-  var legendHTML = ['D','I','S','C'].map(function(k) {
-    return '<span style="display:inline-block;margin-right:10px;font-family:Arial,sans-serif;font-size:9px;color:#555;font-weight:700;">' +
-      '<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + DISC_COLORS[k] + ';vertical-align:middle;margin-right:3px;"></span>' + k +
-    '</span>';
+  var legendHTML = ['D','I','S','C'].map(function (k) {
+    return '<span style="display:inline-block;margin-right:10px;' +
+      'font-family:Arial,sans-serif;font-size:9px;color:#555;font-weight:700;">' +
+      '<span style="display:inline-block;width:10px;height:10px;border-radius:2px;' +
+        'background:' + DISC_COLORS[k] + ';vertical-align:middle;margin-right:3px;"></span>' +
+      k + '</span>';
   }).join('');
 
+  /* ── Seções completas em ordem ── */
+  var secoesHTML =
+    textoHTML('Características',          sd.caracteristicas)       +
+    cardHTML ('Potencialidades',           sd.potencialidades)       +
+    textoHTML('Relações Interpessoais',   sd.relacoesInterpessoais) +
+    textoHTML('Tomada de Decisão',         sd.tomadaDecisao)         +
+    cardHTML ('Motivadores',               sd.motivadores)           +
+    cardHTML ('Medos',                     sd.medos)                 +  /* ← NOVO */
+    cardHTML ('Pontos a Desenvolver',      sd.pontosDesenvolver)     +
+    textoHTML('Como Você Age Sob Pressão', sd.sobPressao);
+
+  /* ── HTML final ── */
   return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">' +
-    '<style>*{box-sizing:border-box;margin:0;padding:0;}body{background:#fff;}table{border-collapse:collapse;}</style>' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0;}' +
+    'body{background:#fff;}table{border-collapse:collapse;}</style>' +
     '</head><body>' +
-    '<div id="pdf-root" style="font-family:Arial,Helvetica,sans-serif;background:#ffffff;color:#1a1a1a;padding:32px 32px 44px;width:794px;">' +
-      '<table style="width:100%;border-bottom:3px solid #1a1a1a;margin-bottom:22px;"><tr>' +
-        '<td style="vertical-align:bottom;padding-bottom:12px;">' +
-          '<span style="font-size:22px;font-weight:700;color:#1a1a1a;">DISC</span>' +
-          '<span style="font-size:22px;font-weight:400;color:#555;">Platform</span>' +
-          '<div style="font-size:11px;color:#888;margin-top:4px;">Avaliação de Perfil Comportamental — ' + name + '</div>' +
-        '</td>' +
-        '<td style="vertical-align:bottom;text-align:right;padding-bottom:12px;">' +
-          '<span style="font-size:11px;color:#777;line-height:1.7;">' + date + '<br>Relatório Individual DISC</span>' +
-        '</td>' +
-      '</tr></table>' +
-      '<div style="margin-bottom:20px;padding:18px 22px;border:2px solid #e8e8e8;border-radius:8px;background:#fafafa;">' +
-        '<div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#888;margin-bottom:8px;">Resultado</div>' +
-        '<div style="margin-bottom:6px;">' + label + secBlock + '</div>' +
-        '<div style="font-size:13px;color:#555;font-style:italic;">' + tag + '</div>' +
-      '</div>' +
-      '<div style="margin-bottom:22px;">' +
-        secTitle('Distribuição de Pontuação — Eixos DISC') +
-        chartHTML +
-      '</div>' +
-      '<div style="margin-bottom:18px;">' +
-        secTitle('Análise do Perfil') +
-        '<div style="padding:16px 20px;background:#f7f7f7;border-radius:6px;border-left:4px solid ' + DISC_COLORS[pk] + ';">' + descHTML + '</div>' +
-      '</div>' +
-      '<div style="margin-bottom:22px;">' +
-        secTitle('Mapeamento Comportamental') +
-        '<table style="width:100%;"><tr>' +
-          '<td style="width:50%;vertical-align:top;padding-right:7px;">'  + card('✦ Pontos Fortes',    data.strengths)    + '</td>' +
-          '<td style="width:50%;vertical-align:top;padding-left:7px;">'   + card('◎ A Desenvolver',    data.develop)      + '</td>' +
-        '</tr><tr>' +
-          '<td style="width:50%;vertical-align:top;padding-right:7px;padding-top:10px;">' + card('◈ Comunicação',   data.communication) + '</td>' +
-          '<td style="width:50%;vertical-align:top;padding-left:7px;padding-top:10px;">'  + card('◉ Ambiente Ideal', data.environment)   + '</td>' +
-        '</tr></table>' +
-      '</div>' +
-      '<table style="width:100%;border-top:1.5px solid #ddd;margin-top:18px;"><tr>' +
-        '<td style="vertical-align:middle;padding-top:10px;">' +
-          '<span style="font-size:9px;color:#aaa;line-height:1.6;">' +
-            'Relatório gerado pela DISC Platform. Os resultados refletem tendências comportamentais.<br>' +
-            'Recomenda-se interpretação por profissional habilitado.' +
-          '</span>' +
-        '</td>' +
-        '<td style="vertical-align:middle;text-align:right;padding-top:10px;">' + legendHTML + '</td>' +
-      '</tr></table>' +
+    '<div id="pdf-root" style="font-family:Arial,Helvetica,sans-serif;background:#fff;' +
+      'color:#1a1a1a;padding:30px 32px 44px;width:794px;">' +
+
+    /* Cabeçalho */
+    '<table style="width:100%;border-bottom:3px solid #1a1a1a;margin-bottom:20px;"><tr>' +
+      '<td style="vertical-align:bottom;padding-bottom:12px;">' +
+        '<span style="font-size:22px;font-weight:700;color:#1a1a1a;">DISC</span>' +
+        '<span style="font-size:22px;font-weight:400;color:#555;">Platform</span>' +
+        '<div style="font-size:11px;color:#888;margin-top:3px;">' +
+          'Avaliação de Perfil Comportamental — ' + name + '</div>' +
+      '</td>' +
+      '<td style="vertical-align:bottom;text-align:right;padding-bottom:12px;">' +
+        '<span style="font-size:11px;color:#777;line-height:1.7;">' +
+          date + '<br>Relatório Individual DISC</span>' +
+      '</td>' +
+    '</tr></table>' +
+
+    /* Perfil identificado — CORREÇÃO: só kicker + nome colorido + descricaoCurta */
+    '<div style="margin-bottom:20px;padding:16px 22px;border:2px solid #e8e8e8;' +
+      'border-radius:8px;background:#fafafa;">' +
+      kickerHTML +
+      nomeColorido +
+      tagHTML +
+    '</div>' +
+
+    /* Gráfico */
+    '<div style="margin-bottom:22px;">' +
+      secTitleHTML('Distribuição de Pontuação — Eixos DISC') +
+      chartHTML +
+    '</div>' +
+
+    /* Todas as seções do perfil */
+    '<div style="margin-bottom:8px;">' +
+      secTitleHTML('Análise Completa do Perfil') +
+      secoesHTML +
+    '</div>' +
+
+    /* Rodapé */
+    '<table style="width:100%;border-top:1.5px solid #ddd;margin-top:16px;"><tr>' +
+      '<td style="vertical-align:middle;padding-top:10px;">' +
+        '<span style="font-size:9px;color:#aaa;line-height:1.6;">' +
+          'Relatório gerado pela DISC Platform. Os resultados refletem tendências comportamentais.<br>' +
+          'Recomenda-se interpretação por profissional habilitado.' +
+        '</span>' +
+      '</td>' +
+      '<td style="vertical-align:middle;text-align:right;padding-top:10px;">' +
+        legendHTML +
+      '</td>' +
+    '</tr></table>' +
+
     '</div></body></html>';
 }
 
+/* ════════════════════════════════════════════════════
+   downloadPDF
+   CORREÇÃO DE PAGINAÇÃO:
+     Problema anterior: a divisão de páginas usava a
+     altura do PDF (mm), causando imprecisão acumulada.
+     Solução: trabalhar inteiramente em pixels do canvas
+     e só converter para mm no addImage() final.
+     Isso elimina erros de arredondamento que cortavam
+     conteúdo em perfis triplos.
+════════════════════════════════════════════════════ */
 function downloadPDF() {
-  var r   = lastResult;
+  var r = lastResult;
   if (!r) return;
+
   var btn  = document.querySelector('[onclick="downloadPDF()"]');
   var orig = btn ? btn.innerHTML : '';
-  if (btn) { btn.innerHTML = '⏳ Gerando…'; btn.disabled = true; }
+  if (btn) { btn.innerHTML = '⏳ Gerando PDF…'; btn.disabled = true; }
 
-  var PDF_PX  = 794;
-  var wrapper = document.createElement('div');
-  wrapper.style.cssText =
-    'position:absolute;top:0;left:0;width:' + PDF_PX + 'px;' +
-    'visibility:hidden;pointer-events:none;z-index:-1;background:#fff;overflow:visible;';
-  document.body.appendChild(wrapper);
-  wrapper.innerHTML = buildPdfHTML(r);
-  var root = wrapper.querySelector('#pdf-root');
+  ProfileService.getProfileForResult(r)
+    .then(function (profile) {
 
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      setTimeout(function() {
-        html2canvas(root, {
-          scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false,
-          width: PDF_PX, windowWidth: PDF_PX, scrollX: 0, scrollY: 0,
-          onclone: function(doc, el) {
-            el.style.visibility = 'visible';
-            el.style.position   = 'static';
-            var pr = doc.getElementById('pdf-root');
-            if (pr) { pr.style.visibility = 'visible'; pr.style.display = 'block'; }
-          }
-        }).then(function(canvas) {
-          var jsPDF  = window.jspdf.jsPDF;
-          var pdf    = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
-          var A4_W=210, A4_H=297, M=8, usableW=A4_W-M*2;
-          var imgW   = canvas.width, imgH = canvas.height;
-          var pdfImgW = usableW, pdfImgH = pdfImgW * (imgH / imgW);
-          var pageH  = A4_H - M*2;
-          var off    = 0, first = true;
-          while (off < pdfImgH) {
-            if (!first) pdf.addPage(); first = false;
-            var sTopPx = (off / pdfImgH) * imgH;
-            var sH     = Math.min((pageH / pdfImgH) * imgH, imgH - sTopPx);
-            var sc     = document.createElement('canvas');
-            sc.width   = imgW; sc.height = Math.ceil(sH);
-            var ctx    = sc.getContext('2d');
-            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, sc.width, sc.height);
-            ctx.drawImage(canvas, 0, -sTopPx);
-            pdf.addImage(sc.toDataURL('image/jpeg', .97), 'JPEG', M, M, pdfImgW, (sc.height / imgH) * pdfImgH);
-            off += pageH;
-          }
-          pdf.save('disc-' + r.name.replace(/\s+/g, '-').toLowerCase() + '.pdf');
-          document.body.removeChild(wrapper);
-          if (btn) { btn.innerHTML = orig; btn.disabled = false; }
-        }).catch(function(e) {
-          console.error(e);
-          document.body.removeChild(wrapper);
-          if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+      /* ── 1. Gerar o HTML do relatório ── */
+      var htmlStr = buildPdfHTML(r, profile);
+
+      /* ── 2. Criar wrapper temporário fora da viewport.
+              position:absolute + left:-10000px garante que o
+              elemento está no DOM, com layout calculado pelo
+              browser, mas invisível ao usuário.
+              NÃO usar opacity:0, visibility:hidden, overflow:hidden,
+              width:0/height:0 ou z-index negativo — qualquer um
+              desses impede o html2canvas de pintar o conteúdo. ── */
+      var wrapper = document.createElement('div');
+      wrapper.style.cssText =
+        'position:absolute;'   +
+        'left:-10000px;'       +
+        'top:0;'               +
+        'width:794px;'         +
+        'background:#ffffff;'  +
+        'overflow:visible;';
+      document.body.appendChild(wrapper);
+
+      /* ── 3. Injetar o HTML e obter a raiz do relatório ── */
+      wrapper.innerHTML = htmlStr;
+      var root = wrapper.querySelector('#pdf-root');
+
+      /* ── 4. Aguardar layout estabilizar:
+              rAF duplo assegura que o browser concluiu a pintura
+              inicial; o setTimeout de 500ms aguarda fontes e
+              reflows secundários (tabelas, posicionamento). ── */
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          setTimeout(function () {
+
+            /* ── 5. Capturar com html2canvas diretamente sobre root ── */
+            html2canvas(root, {
+              scale:           2,
+              useCORS:         true,
+              
+              backgroundColor: '#ffffff',
+              logging:         false,
+              width:           794,
+              windowWidth:     794,
+              scrollX:         0,
+              scrollY:         0,
+              onclone: function (clonedDoc) {
+                var pr = clonedDoc.getElementById('pdf-root');
+                if (pr) {
+                  pr.style.display    = 'block';
+                  pr.style.visibility = 'visible';
+                  pr.style.overflow   = 'visible';
+                  pr.style.background = '#ffffff';
+                }
+              }
+            })
+            .then(function (canvas) {
+
+              /* ── 6. Gerar PDF A4 com paginação por fatias ── */
+              var jsPDF   = window.jspdf.jsPDF;
+              var pdf     = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+
+              var A4_W    = 210, A4_H = 297;
+              var MARGIN  = 8;
+              var useW_mm = A4_W - MARGIN * 2;   /* 194 mm */
+              var useH_mm = A4_H - MARGIN * 2;   /* 281 mm */
+              var mmPerPx = useW_mm / canvas.width;
+              var pageHpx = Math.floor(useH_mm / mmPerPx);
+
+              var offsetPx = 0;
+              var first    = true;
+
+              while (offsetPx < canvas.height) {
+                if (!first) pdf.addPage();
+                first = false;
+
+                var sliceH = Math.min(pageHpx, canvas.height - offsetPx);
+
+                var slice   = document.createElement('canvas');
+                slice.width  = canvas.width;
+                slice.height = sliceH;
+                var ctx = slice.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, slice.width, slice.height);
+                ctx.drawImage(canvas,
+                  0, offsetPx, canvas.width, sliceH,
+                  0, 0,        slice.width,  sliceH);
+
+                pdf.addImage(
+                  slice.toDataURL('image/jpeg', 0.95),
+                  'JPEG',
+                  MARGIN, MARGIN,
+                  useW_mm, sliceH * mmPerPx
+                );
+
+                offsetPx += pageHpx;
+              }
+
+              /* ── 7. Salvar e limpar ── */
+              pdf.save('disc-' + r.name.replace(/\s+/g, '-').toLowerCase() + '.pdf');
+              document.body.removeChild(wrapper);
+              if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+            })
+            .catch(function (e) {
+              console.error('[downloadPDF] html2canvas:', e);
+              if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+              if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+            });
+
+          }, 500);
         });
-      }, 700);
+      });
+    })
+    .catch(function (err) {
+      console.error('[downloadPDF] ProfileService:', err);
+      if (btn) { btn.innerHTML = orig; btn.disabled = false; }
     });
-  });
 }

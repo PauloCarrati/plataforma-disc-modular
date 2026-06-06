@@ -1,12 +1,12 @@
 /* ══════════════════════════════════════════════════════
-   profile-service.js — DISC Platform — FASE 0
+   profile-service.js — DISC Platform — FASE 2
    ─────────────────────────────────────────────────────
    RESPONSABILIDADE:
      Camada de serviço entre a plataforma e os dados
      de perfis DISC armazenados em disc-profiles.json.
 
-   A plataforma NUNCA deve acessar o JSON diretamente.
-   Todo acesso deve passar por este serviço.
+   A plataforma NUNCA acessa o JSON diretamente.
+   Todo acesso passa por este serviço.
 
    ARQUITETURA:
      Resultado DISC
@@ -15,240 +15,268 @@
            ↓
      data/disc-profiles.json
 
-   STATUS: FASE 0 — infraestrutura criada.
-     Nenhuma tela consome este serviço ainda.
-     Integração com relatórios e PDF ocorrerá
-     nas fases seguintes.
+   MUDANÇAS DA FASE 2 em relação à Fase 0:
+     Novos métodos públicos:
+       • getProfileForResult(r)  → Promise<Object>
+       • buildScreenData(profile)→ Object (síncrono)
+       • buildPdfData(profile,r) → Object (síncrono)
 
-   API PÚBLICA:
-     getProfile(code)     → Promise<Object|null>
-     listProfiles()       → Promise<string[]>
-     profileExists(code)  → Promise<boolean>
-
-   COMO TESTAR (console do navegador):
-     await getProfile("D")
-     await getProfile("SC")
-     await getProfile("DIS")
-     await getProfile("XYZ")   // retorna null — perfil inexistente
-     await listProfiles()      // retorna ["D","SC","DIS"]
-     await profileExists("D")  // retorna true
+   API PÚBLICA COMPLETA:
+     getProfile(code)          → Promise<Object|null>
+     getProfileForResult(r)    → Promise<Object>
+     buildScreenData(profile)  → Object
+     buildPdfData(profile, r)  → Object
+     listProfiles()            → Promise<string[]>
+     profileExists(code)       → Promise<boolean>
+     clearCache()              → void
 ══════════════════════════════════════════════════════ */
 
-/* ────────────────────────────────────────────────────
-   CONFIGURAÇÃO — sem números mágicos, sem caminhos
-   hardcoded espalhados pelo código.
-──────────────────────────────────────────────────── */
-var ProfileService = (function() {
+var ProfileService = (function () {
 
-  /* Caminho relativo ao index.html (raiz do frontend) */
   var JSON_PATH = './data/disc-profiles.json';
+  var _cache    = null;
 
-  /* Cache em memória — o JSON é carregado uma única vez.
-     Evita múltiplos fetches desnecessários durante a sessão. */
-  var _cache = null;
-
-  /* ════════════════════════════════════════════════
-     PRIVADO: _load
-     Carrega e valida o JSON. Usa o cache se já
-     estiver disponível.
-  ════════════════════════════════════════════════ */
+  /* ────────────────────────────────────────────────
+     PRIVADO: _load — carrega JSON com cache
+  ──────────────────────────────────────────────── */
   function _load() {
-    /* Retorna cache se já carregado */
-    if (_cache !== null) {
-      return Promise.resolve(_cache);
-    }
+    if (_cache !== null) return Promise.resolve(_cache);
 
     return fetch(JSON_PATH)
-      .then(function(response) {
-        if (!response.ok) {
-          throw new Error(
-            '[ProfileService] Falha ao carregar disc-profiles.json: ' +
-            response.status + ' ' + response.statusText
-          );
-        }
-        return response.json();
+      .then(function (res) {
+        if (!res.ok) throw new Error(
+          '[ProfileService] Falha ao carregar disc-profiles.json: ' +
+          res.status + ' ' + res.statusText
+        );
+        return res.json();
       })
-      .then(function(data) {
-        /* Remove a chave _meta antes de armazenar no cache.
-           _meta é documentação interna, não é um perfil. */
+      .then(function (data) {
         var profiles = {};
-        Object.keys(data).forEach(function(key) {
-          if (key !== '_meta') profiles[key] = data[key];
+        Object.keys(data).forEach(function (k) {
+          if (k !== '_meta') profiles[k] = data[k];
         });
         _cache = profiles;
-        console.log(
-          '[ProfileService] disc-profiles.json carregado. ' +
-          'Perfis disponíveis: ' + Object.keys(_cache).join(', ')
-        );
+        console.log('[ProfileService] Carregado. Perfis: ' + Object.keys(_cache).length);
         return _cache;
       })
-      .catch(function(err) {
+      .catch(function (err) {
         console.error('[ProfileService]', err.message);
-
-        /* ── PONTO DE INTEGRAÇÃO FUTURA ─────────────────
-           Quando existir backend real, substituir o fetch
-           acima por uma chamada à API:
-
-           return fetch('/api/disc/profiles')
-             .then(function(r) { return r.json(); })
-             .then(function(data) { _cache = data; return _cache; });
-        ─────────────────────────────────────────────────── */
-
         throw err;
       });
   }
 
   /* ════════════════════════════════════════════════
      PÚBLICO: getProfile(code)
-     Retorna o objeto completo do perfil solicitado,
-     ou null se o código não existir no JSON.
-
-     Parâmetro:
-       code — string (ex: "D", "SC", "DIS")
-              A busca é case-sensitive e segue o
-              padrão de chaves do JSON.
-
-     Retorna: Promise<Object|null>
-
-     Exemplo:
-       var perfil = await getProfile("SC");
-       // → { code:"SC", title:"Estável Conforme", … }
-
-       var nulo = await getProfile("XYZ");
-       // → null
+     Retorna objeto completo do perfil ou null.
   ════════════════════════════════════════════════ */
   function getProfile(code) {
     if (!code || typeof code !== 'string') {
       console.warn('[ProfileService] getProfile: código inválido →', code);
       return Promise.resolve(null);
     }
+    return _load().then(function (profiles) {
+      var p = profiles[code] || null;
+      if (p) console.log('[ProfileService] getProfile("' + code + '") → ' + p.nome);
+      else   console.warn('[ProfileService] getProfile("' + code + '") → não encontrado.');
+      return p;
+    });
+  }
 
-    return _load().then(function(profiles) {
+  /* ════════════════════════════════════════════════
+     PÚBLICO: getProfileForResult(r)
+     Resolve o perfil correto a partir de um objeto
+     de resultado DISC (r.profileCode / r.primaryKey).
+
+     Prioridade de busca:
+       1. r.profileCode  (ex: "DIS", "SC", "D")
+       2. r.primaryKey   (fallback se combinado falhar)
+
+     Retorna: Promise<Object> — nunca null.
+  ════════════════════════════════════════════════ */
+  function getProfileForResult(r) {
+    if (!r) return Promise.reject(
+      new Error('[ProfileService] getProfileForResult: resultado nulo.')
+    );
+
+    var code     = r.profileCode || r.primaryKey || '';
+    var fallback = r.primaryKey  || '';
+
+    return _load().then(function (profiles) {
       var profile = profiles[code] || null;
 
-      if (profile) {
-        console.log('[ProfileService] getProfile("' + code + '") → encontrado:', profile.title);
-      } else {
-        console.warn('[ProfileService] getProfile("' + code + '") → perfil não encontrado no JSON.');
+      if (!profile && fallback && fallback !== code) {
+        console.warn('[ProfileService] "' + code + '" não encontrado. Fallback: "' + fallback + '"');
+        profile = profiles[fallback] || null;
       }
 
+      if (!profile) throw new Error(
+        '[ProfileService] getProfileForResult: perfil "' + code + '" não encontrado.'
+      );
+
+      console.log('[ProfileService] getProfileForResult("' + code + '") → ' + profile.nome);
       return profile;
     });
   }
 
   /* ════════════════════════════════════════════════
-     PÚBLICO: listProfiles()
-     Retorna um array com todos os códigos de perfil
-     disponíveis no JSON, em ordem alfabética.
+     PÚBLICO: buildScreenData(profile)
+     Transforma o perfil JSON no formato exato
+     esperado pelos IDs do HTML e por showResults().
 
-     Retorna: Promise<string[]>
+     Mapeamento JSON → componentes da tela:
+       nome              → título principal
+       titulo            → kicker / subtítulo
+       descricaoCurta    → tagline
+       caracteristicas   → res-desc-body (parágrafo 1)
+       relacoesInterpessoais → res-desc-body (parágrafo 2)
+       tomadaDecisao     → res-desc-body (parágrafo 3)
+       sobPressao        → res-desc-body (parágrafo 4)
+       potencialidades   → res-strengths
+       pontosDesenvolver → res-develop
+       relacoesInterpessoais → res-communication
+       motivadores       → res-environment
 
-     Exemplo:
-       var lista = await listProfiles();
-       // → ["D", "DIS", "SC"]
+     Retorna: Object (síncrono)
+  ════════════════════════════════════════════════ */
+  function buildScreenData(profile) {
+    return {
+      /* Identificação */
+      codigo: profile.codigo,
+      nome:   profile.nome,
+      titulo: profile.titulo,
+
+      /* Campos textuais avulsos */
+      descricaoCurta:        profile.descricaoCurta        || '',
+      caracteristicas:       profile.caracteristicas       || '',
+      relacoesInterpessoais: profile.relacoesInterpessoais || '',
+      tomadaDecisao:         profile.tomadaDecisao         || '',
+      sobPressao:            profile.sobPressao            || '',
+
+      /* Listas */
+      potencialidades:   _arr(profile.potencialidades),
+      motivadores:       _arr(profile.motivadores),
+      medos:             _arr(profile.medos),
+      pontosDesenvolver: _arr(profile.pontosDesenvolver),
+
+      /* ── Campos no formato legado de reports.js ──
+         Mantidos para não alterar showResults() nem PDF */
+      tagline:       profile.descricaoCurta || '',
+      description:   _toDescArray(profile),
+      strengths:     _arr(profile.potencialidades),
+      develop:       _arr(profile.pontosDesenvolver),
+      communication: _toSentenceList(profile.relacoesInterpessoais),
+      environment:   _arr(profile.motivadores)
+    };
+  }
+
+  /* ════════════════════════════════════════════════
+     PÚBLICO: buildPdfData(profile, r)
+     Prepara dados para buildPdfHTML() em reports.js.
+     Inclui todas as seções do relatório PDF completo.
+  ════════════════════════════════════════════════ */
+  function buildPdfData(profile, r) {
+    var base = buildScreenData(profile);
+
+    return Object.assign({}, base, {
+      secoes: [
+        { titulo: 'Características',           tipo: 'texto', conteudo: profile.caracteristicas       || '' },
+        { titulo: 'Potencialidades',            tipo: 'lista', conteudo: _arr(profile.potencialidades)      },
+        { titulo: 'Relações Interpessoais',     tipo: 'texto', conteudo: profile.relacoesInterpessoais || '' },
+        { titulo: 'Tomada de Decisão',          tipo: 'texto', conteudo: profile.tomadaDecisao         || '' },
+        { titulo: 'Motivadores',                tipo: 'lista', conteudo: _arr(profile.motivadores)          },
+        { titulo: 'Medos',                      tipo: 'lista', conteudo: _arr(profile.medos)                },
+        { titulo: 'Pontos a Desenvolver',       tipo: 'lista', conteudo: _arr(profile.pontosDesenvolver)    },
+        { titulo: 'Como Você Age Sob Pressão',  tipo: 'texto', conteudo: profile.sobPressao            || '' }
+      ]
+    });
+  }
+
+  /* ════════════════════════════════════════════════
+     PÚBLICO: listProfiles() → Promise<string[]>
   ════════════════════════════════════════════════ */
   function listProfiles() {
-    return _load().then(function(profiles) {
-      return Object.keys(profiles).sort();
-    });
+    return _load().then(function (p) { return Object.keys(p).sort(); });
   }
 
   /* ════════════════════════════════════════════════
-     PÚBLICO: profileExists(code)
-     Verifica se um código de perfil existe no JSON
-     sem retornar o objeto completo.
-     Útil para validação rápida antes de renderizar.
-
-     Retorna: Promise<boolean>
-
-     Exemplo:
-       var existe = await profileExists("DIS");
-       // → true
+     PÚBLICO: profileExists(code) → Promise<boolean>
   ════════════════════════════════════════════════ */
   function profileExists(code) {
-    return _load().then(function(profiles) {
-      return Object.prototype.hasOwnProperty.call(profiles, code);
+    return _load().then(function (p) {
+      return Object.prototype.hasOwnProperty.call(p, code);
     });
   }
 
   /* ════════════════════════════════════════════════
-     PÚBLICO: clearCache()
-     Força recarregamento do JSON na próxima chamada.
-     Útil para desenvolvimento e testes.
+     PÚBLICO: clearCache() — força reload do JSON
   ════════════════════════════════════════════════ */
   function clearCache() {
     _cache = null;
-    console.log('[ProfileService] Cache limpo. Próxima chamada recarregará o JSON.');
+    console.log('[ProfileService] Cache limpo.');
   }
 
-  /* ── Expõe a API pública ── */
+  /* ────────────────────────────────────────────────
+     PRIVADOS — helpers de transformação
+  ──────────────────────────────────────────────── */
+
+  /* Garante array — aceita array ou string */
+  function _arr(val) {
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string' && val.trim()) return [val];
+    return [];
+  }
+
+  /*
+   * _toDescArray
+   * Converte os campos textuais do novo JSON para o
+   * array de parágrafos que reports.js espera em
+   * data.description (usado em res-desc-body e no PDF).
+   */
+  function _toDescArray(p) {
+    var parts = [];
+    if (p.descricaoCurta        && p.descricaoCurta.trim())        parts.push(p.descricaoCurta);
+    if (p.caracteristicas       && p.caracteristicas.trim())       parts.push(p.caracteristicas);
+    if (p.relacoesInterpessoais && p.relacoesInterpessoais.trim()) parts.push(p.relacoesInterpessoais);
+    if (p.tomadaDecisao         && p.tomadaDecisao.trim())         parts.push(p.tomadaDecisao);
+    if (p.sobPressao            && p.sobPressao.trim())            parts.push(p.sobPressao);
+    return parts.length > 0 ? parts : ['Perfil ' + (p.nome || p.codigo) + '.'];
+  }
+
+  /*
+   * _toSentenceList
+   * Converte um parágrafo de relações interpessoais
+   * em lista de frases para o card "Comunicação".
+   */
+  function _toSentenceList(text) {
+    if (Array.isArray(text)) return text;
+    if (!text || !text.trim()) return [];
+    var sentences = text
+      .split(/(?<=[.!?])\s+/)
+      .map(function (s) { return s.trim(); })
+      .filter(function (s) { return s.length > 4; });
+    return sentences.length > 0 ? sentences : [text];
+  }
+
+  /* ── API pública ── */
   return {
-    getProfile:     getProfile,
-    listProfiles:   listProfiles,
-    profileExists:  profileExists,
-    clearCache:     clearCache
+    getProfile:          getProfile,
+    getProfileForResult: getProfileForResult,
+    buildScreenData:     buildScreenData,
+    buildPdfData:        buildPdfData,
+    listProfiles:        listProfiles,
+    profileExists:       profileExists,
+    clearCache:          clearCache
   };
 
 })();
 
 /* ════════════════════════════════════════════════════
-   ATALHOS GLOBAIS
-   Expostos no window para acesso direto no console
-   do navegador durante testes (FASE 0).
-   Em produção podem ser removidos ou mantidos
-   como parte da API pública do serviço.
+   ATALHOS GLOBAIS — compatibilidade com Fase 0 e console
 ════════════════════════════════════════════════════ */
-window.getProfile     = function(code) { return ProfileService.getProfile(code); };
-window.listProfiles   = function()     { return ProfileService.listProfiles();   };
-window.profileExists  = function(code) { return ProfileService.profileExists(code); };
+window.getProfile     = function (c) { return ProfileService.getProfile(c);          };
+window.listProfiles   = function ()  { return ProfileService.listProfiles();          };
+window.profileExists  = function (c) { return ProfileService.profileExists(c);        };
 window.ProfileService = ProfileService;
 
-/* ════════════════════════════════════════════════════
-   TESTE DE VALIDAÇÃO — FASE 0
-   ─────────────────────────────────────────────────
-   Descomente o bloco abaixo para executar os testes
-   automaticamente quando a página carrega.
-   Mantenha comentado em produção.
-════════════════════════════════════════════════════ */
-/*
-(function runPhase0Tests() {
-  console.group('[ProfileService] FASE 0 — Testes de validação');
-
-  var tests = [
-    { code: 'D',   shouldExist: true  },
-    { code: 'SC',  shouldExist: true  },
-    { code: 'DIS', shouldExist: true  },
-    { code: 'XYZ', shouldExist: false }
-  ];
-
-  var passed = 0;
-  var failed = 0;
-
-  tests.forEach(function(t) {
-    getProfile(t.code).then(function(result) {
-      var ok = t.shouldExist ? result !== null : result === null;
-      if (ok) {
-        passed++;
-        console.log(
-          '  ✓ getProfile("' + t.code + '") →',
-          result ? result.title : 'null (esperado)'
-        );
-      } else {
-        failed++;
-        console.error(
-          '  ✗ getProfile("' + t.code + '") → resultado inesperado:', result
-        );
-      }
-      if (passed + failed === tests.length) {
-        console.log('─────────────────────────────────');
-        console.log('  Resultado: ' + passed + '/' + tests.length + ' testes passaram.');
-        if (failed > 0) console.error('  FALHAS: ' + failed);
-        console.groupEnd();
-      }
-    });
-  });
-})();
-*/
-
-console.log('[ProfileService] profile-service.js carregado. ' +
-  'Use: await getProfile("D") | await listProfiles() | await profileExists("SC")');
+console.log('[ProfileService] Fase 2 carregado. ' +
+  'Use: await getProfile("D") | await getProfile("DIS") | await listProfiles()');

@@ -480,9 +480,7 @@
       <p class="res-kicker">Resultado — Perfil Comportamental DISC</p>
       <h1 class="res-name"    id="res-name"></h1>
       <p  class="res-tagline" id="res-tagline"></p>
-      <div class="res-sec-badge hidden" id="res-sec-badge">
-        Perfil Secundário: <strong id="res-sec-name" style="color:var(--text)"></strong>
-      </div>
+<!-- res-sec-badge removido na Fase 2 pós-correção -->
     </div>
     <div class="score-bars">
       <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--d)">D</span><span class="sbar-name">Dominância</span></div><div class="sbar-track"><div class="sbar-fill" id="bar-d" style="background:var(--d)"></div></div><span class="sbar-pct" id="pct-d">0 pts</span></div>
@@ -495,10 +493,11 @@
       <div id="res-desc-body"></div>
     </div>
     <div class="res-cards fade">
-      <div class="rc"><h4>✦ Pontos Fortes</h4><ul id="res-strengths"></ul></div>
-      <div class="rc"><h4>◎ A Desenvolver</h4><ul id="res-develop"></ul></div>
-      <div class="rc"><h4>◈ Comunicação</h4>  <ul id="res-communication"></ul></div>
-      <div class="rc"><h4>◉ Ambiente Ideal</h4><ul id="res-environment"></ul></div>
+      <div class="rc"><h4>✦ Potencialidades</h4>      <ul id="res-strengths"></ul></div>
+      <div class="rc"><h4>◎ Pontos a Desenvolver</h4> <ul id="res-develop"></ul></div>
+      <div class="rc"><h4>◈ Relações Interpessoais</h4><ul id="res-communication"></ul></div>
+      <div class="rc"><h4>◉ Motivadores</h4>          <ul id="res-environment"></ul></div>
+      <div class="rc"><h4>⚠ Medos</h4>               <ul id="res-medos"></ul></div>
     </div>
     <div class="res-actions">
       <button class="btn btn-ghost" id="btn-back-admin"
@@ -522,9 +521,7 @@
       <p class="res-kicker">Perfil Comportamental DISC</p>
       <h1 class="res-name"    id="pub-name"></h1>
       <p  class="res-tagline" id="pub-tagline"></p>
-      <div class="res-sec-badge hidden" id="pub-sec-badge">
-        Perfil Secundário: <strong id="pub-sec-name" style="color:var(--text)"></strong>
-      </div>
+<!-- pub-sec-badge removido na Fase 2 pós-correção -->
     </div>
     <div class="score-bars">
       <div class="sbar-row"><div class="sbar-lbl"><span class="sbar-letter" style="color:var(--d)">D</span><span class="sbar-name">Dominância</span></div><div class="sbar-track"><div class="sbar-fill" id="pub-bar-d" style="background:var(--d)"></div></div><span class="sbar-pct" id="pub-pct-d">0 pts</span></div>
@@ -537,10 +534,11 @@
       <div id="pub-desc-body"></div>
     </div>
     <div class="res-cards fade">
-      <div class="rc"><h4>✦ Pontos Fortes</h4><ul id="pub-strengths"></ul></div>
-      <div class="rc"><h4>◎ A Desenvolver</h4><ul id="pub-develop"></ul></div>
-      <div class="rc"><h4>◈ Comunicação</h4>  <ul id="pub-communication"></ul></div>
-      <div class="rc"><h4>◉ Ambiente Ideal</h4><ul id="pub-environment"></ul></div>
+      <div class="rc"><h4>✦ Potencialidades</h4>      <ul id="pub-strengths"></ul></div>
+      <div class="rc"><h4>◎ Pontos a Desenvolver</h4> <ul id="pub-develop"></ul></div>
+      <div class="rc"><h4>◈ Relações Interpessoais</h4><ul id="pub-communication"></ul></div>
+      <div class="rc"><h4>◉ Motivadores</h4>          <ul id="pub-environment"></ul></div>
+      <div class="rc"><h4>⚠ Medos</h4>               <ul id="pub-medos"></ul></div>
     </div>
     <p style="text-align:center;font-size:.78rem;color:var(--text3);padding-bottom:48px">
       Relatório gerado pela DISC Platform ·
@@ -737,15 +735,19 @@
 
 <!-- ════════════════════════════════════════════════════
      SCRIPTS — ORDEM OBRIGATÓRIA (não alterar)
-     1. disc-engine.js  → dados DISC (sem dependências)
-     2. globals.js      → MockDB, CentralDB, estado, utils
-     3. dashboard.js    → painel; define openAdmin()
-     4. auth.js         → login; chama openAdmin()
-     5. reports.js      → resultados; define showResults()
-     6. app.js          → quiz, init(); chama tudo acima
+     1. disc-engine.js       → dados DISC, algoritmo, cores
+     2. globals.js           → MockDB, CentralDB, estado, utils
+     3. services/profile-service.js → camada de dados centralizada
+     4. quiz-engine.js       → motor do quiz
+     5. dashboard.js         → painel; define openAdmin()
+     6. auth.js              → login; chama openAdmin()
+     7. reports.js           → resultados; define showResults()
+     8. app.js               → quiz, init(); chama tudo acima
+     FASE 2: profile-service.js inserido antes de reports.js
 ════════════════════════════════════════════════════ -->
 <script src="disc-engine.js"></script>
 <script src="globals.js"></script>
+<script src="services/profile-service.js"></script>
 <script src="quiz-engine.js"></script>
 <script src="dashboard.js"></script>
 <script src="auth.js"></script>
