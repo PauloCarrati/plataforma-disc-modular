@@ -470,111 +470,155 @@ function downloadPDF() {
   var orig = btn ? btn.innerHTML : '';
   if (btn) { btn.innerHTML = '⏳ Gerando PDF…'; btn.disabled = true; }
 
+  /* ── Dimensões A4 ── */
+  var PDF_PX   = 794;
+  var A4_W_MM  = 210, A4_H_MM  = 297;
+  var MARGIN   = 8;
+  var USE_W_MM = A4_W_MM - MARGIN * 2;   /* 194 mm */
+  var USE_H_MM = A4_H_MM - MARGIN * 2;   /* 281 mm */
+  var GAP_PX   = 10;                      /* espaço vertical entre blocos (px do canvas) */
+
   ProfileService.getProfileForResult(r)
     .then(function (profile) {
 
-      /* ── 1. Gerar o HTML do relatório ── */
+      /* ── 1. Construir o HTML e inserir no DOM ── */
       var htmlStr = buildPdfHTML(r, profile);
 
-      /* ── 2. Criar wrapper temporário fora da viewport.
-              position:absolute + left:-10000px garante que o
-              elemento está no DOM, com layout calculado pelo
-              browser, mas invisível ao usuário.
-              NÃO usar opacity:0, visibility:hidden, overflow:hidden,
-              width:0/height:0 ou z-index negativo — qualquer um
-              desses impede o html2canvas de pintar o conteúdo. ── */
       var wrapper = document.createElement('div');
       wrapper.style.cssText =
-        'position:absolute;'   +
-        'left:-10000px;'       +
-        'top:0;'               +
-        'width:794px;'         +
-        'background:#ffffff;'  +
+        'position:absolute;'  +
+        'left:-10000px;'      +
+        'top:0;'              +
+        'width:' + PDF_PX + 'px;' +
+        'background:#ffffff;' +
         'overflow:visible;';
       document.body.appendChild(wrapper);
-
-      /* ── 3. Injetar o HTML e obter a raiz do relatório ── */
       wrapper.innerHTML = htmlStr;
+
       var root = wrapper.querySelector('#pdf-root');
 
-      /* ── 4. Aguardar layout estabilizar:
-              rAF duplo assegura que o browser concluiu a pintura
-              inicial; o setTimeout de 500ms aguarda fontes e
-              reflows secundários (tabelas, posicionamento). ── */
+      /* ── 2. Identificar todos os blocos capturáveis ──────────────
+         Estrutura do #pdf-root:
+           [0] <table>  cabeçalho
+           [1] <div>    box do perfil
+           [2] <div>    gráfico
+           [3] <div>    container "Análise Completa" (agrupa seções)
+           [4] <table>  rodapé
+
+         O container [3] é desmembrado: seus filhos são adicionados
+         individualmente ao array de blocos para que cada seção
+         seja capturada e paginada de forma independente.
+      ────────────────────────────────────────────────────────────── */
       requestAnimationFrame(function () {
         requestAnimationFrame(function () {
           setTimeout(function () {
 
-            /* ── 5. Capturar com html2canvas diretamente sobre root ── */
-            html2canvas(root, {
-              scale:           2,
-              useCORS:         true,
-              
-              backgroundColor: '#ffffff',
-              logging:         false,
-              width:           794,
-              windowWidth:     794,
-              scrollX:         0,
-              scrollY:         0,
-              onclone: function (clonedDoc) {
-                var pr = clonedDoc.getElementById('pdf-root');
-                if (pr) {
-                  pr.style.display    = 'block';
-                  pr.style.visibility = 'visible';
-                  pr.style.overflow   = 'visible';
-                  pr.style.background = '#ffffff';
-                }
+            var rootChildren = Array.prototype.slice.call(root.children);
+            var blocos       = [];
+
+            rootChildren.forEach(function (child, idx) {
+              /* O 4º filho (índice 3) é o container de análise —
+                 desmembrar seus filhos diretos em blocos individuais */
+              if (idx === 3) {
+                var secChildren = Array.prototype.slice.call(child.children);
+                secChildren.forEach(function (sec) {
+                  blocos.push(sec);
+                });
+              } else {
+                blocos.push(child);
               }
-            })
-            .then(function (canvas) {
+            });
 
-              /* ── 6. Gerar PDF A4 com paginação por fatias ── */
-              var jsPDF   = window.jspdf.jsPDF;
-              var pdf     = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+            /* ── 3. Capturar cada bloco como canvas individual ──
+               html2canvas captura o elemento em seu contexto atual
+               (dentro do wrapper já posicionado em left:-10000px).
+               A captura é feita em série (Promise chain) para não
+               sobrecarregar o engine de layout do browser. ── */
+            var capturas = [];
+            var chain    = Promise.resolve();
 
-              var A4_W    = 210, A4_H = 297;
-              var MARGIN  = 8;
-              var useW_mm = A4_W - MARGIN * 2;   /* 194 mm */
-              var useH_mm = A4_H - MARGIN * 2;   /* 281 mm */
-              var mmPerPx = useW_mm / canvas.width;
-              var pageHpx = Math.floor(useH_mm / mmPerPx);
+            blocos.forEach(function (bloco) {
+              chain = chain.then(function () {
+                return html2canvas(bloco, {
+                  scale:           2,
+                  useCORS:         true,
+                  allowTaint:      true,
+                  backgroundColor: '#ffffff',
+                  logging:         false,
+                  windowWidth:     PDF_PX,
+                  scrollX:         0,
+                  scrollY:         0,
+                  onclone: function (clonedDoc, clonedEl) {
+                    clonedEl.style.display    = 'block';
+                    clonedEl.style.visibility = 'visible';
+                    clonedEl.style.overflow   = 'visible';
+                    clonedEl.style.background = clonedEl.style.background || '#ffffff';
+                  }
+                }).then(function (canvas) {
+                  capturas.push(canvas);
+                });
+              });
+            });
 
-              var offsetPx = 0;
+            /* ── 4. Montar as páginas do PDF ──────────────────────
+               Algoritmo de empacotamento (bin packing 1-D):
+                 • manter um cursor Y na página atual
+                 • para cada bloco:
+                     calcular sua altura em mm
+                     se couber na página atual → desenhar e avançar cursor
+                     se não couber → nova página, resetar cursor, desenhar
+               Nenhum bloco é dividido.
+            ────────────────────────────────────────────────────── */
+            chain.then(function () {
+
+              var jsPDF    = window.jspdf.jsPDF;
+              var pdf      = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+
+              /* Escala: mm por pixel (baseada na largura do 1º canvas) */
+              var refW     = capturas[0] ? capturas[0].width : PDF_PX * 2;
+              var mmPerPx  = USE_W_MM / refW;
+              var gapMM    = GAP_PX * mmPerPx;
+
+              var cursorY  = MARGIN;
               var first    = true;
 
-              while (offsetPx < canvas.height) {
-                if (!first) pdf.addPage();
-                first = false;
+              capturas.forEach(function (canvas, ci) {
+                var blocoH_mm = canvas.height * mmPerPx;
 
-                var sliceH = Math.min(pageHpx, canvas.height - offsetPx);
+                /* Verificar se o bloco cabe na página atual
+                   (ignora o gap para o 1º bloco de cada página) */
+                var neededH = (cursorY > MARGIN ? gapMM : 0) + blocoH_mm;
 
-                var slice   = document.createElement('canvas');
-                slice.width  = canvas.width;
-                slice.height = sliceH;
-                var ctx = slice.getContext('2d');
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, slice.width, slice.height);
-                ctx.drawImage(canvas,
-                  0, offsetPx, canvas.width, sliceH,
-                  0, 0,        slice.width,  sliceH);
+                if (!first && cursorY + neededH > A4_H_MM - MARGIN) {
+                  pdf.addPage();
+                  cursorY = MARGIN;
+                }
+
+                /* Adicionar espaçamento entre blocos (exceto no topo) */
+                if (!first && cursorY > MARGIN) {
+                  cursorY += gapMM;
+                }
 
                 pdf.addImage(
-                  slice.toDataURL('image/jpeg', 0.95),
+                  canvas.toDataURL('image/jpeg', 0.95),
                   'JPEG',
-                  MARGIN, MARGIN,
-                  useW_mm, sliceH * mmPerPx
+                  MARGIN,
+                  cursorY,
+                  USE_W_MM,
+                  blocoH_mm
                 );
 
-                offsetPx += pageHpx;
-              }
+                cursorY += blocoH_mm;
+                first    = false;
+              });
 
-              /* ── 7. Salvar e limpar ── */
+              /* ── 5. Salvar e limpar ── */
               pdf.save('disc-' + r.name.replace(/\s+/g, '-').toLowerCase() + '.pdf');
               document.body.removeChild(wrapper);
               if (btn) { btn.innerHTML = orig; btn.disabled = false; }
-            })
-            .catch(function (e) {
-              console.error('[downloadPDF] html2canvas:', e);
+
+            }).catch(function (e) {
+              console.error('[downloadPDF] captura:', e);
               if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
               if (btn) { btn.innerHTML = orig; btn.disabled = false; }
             });
