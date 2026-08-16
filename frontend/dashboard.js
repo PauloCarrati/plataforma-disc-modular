@@ -32,40 +32,150 @@
 
 /* ════════════════════════════════════════════════════
    PAINEL ADMIN — ABERTURA E CONFIGURAÇÃO
+   Autenticação oficial via AuthService / Supabase
 ════════════════════════════════════════════════════ */
-function openAdmin() {
-  currentSession = MockDB.getSession();
-  if (!currentSession) { showScreen('screen-auth'); return; }
+async function openAdmin() {
 
-  var isSA = currentSession.role === 'superadmin';
+  try {
 
-  document.getElementById('sb-aname').textContent          = currentSession.name;
-  document.getElementById('sb-aid').textContent            = isSA ? 'Acesso Global' : 'ID: ' + currentSession.id;
-  document.getElementById('admin-greeting').textContent    = 'Olá, ' + currentSession.name.split(' ')[0] + ' 👋';
-  document.getElementById('admin-sub').textContent         = isSA
-    ? 'Visão Global — todos os participantes do sistema'
-    : 'Resumo das avaliações da sua conta';
-  document.getElementById('participants-sub').textContent  = isSA
-    ? 'Todos os participantes do sistema'
-    : 'Participantes vinculados à sua conta';
+    const profile =
+      await AuthService.getCurrentProfile();
 
-  document.getElementById('sb-superadmin-badge').classList.toggle('hidden', !isSA);
-  document.getElementById('btn-new-eval-top').classList.toggle('hidden', isSA);
-  document.getElementById('btn-new-eval-part').classList.toggle('hidden', isSA);
-  var navNewEval = document.getElementById('nav-new-eval');
-  if (navNewEval) navNewEval.parentElement.classList.toggle('hidden', isSA);
+    if (!profile.success || !profile.usuario) {
 
-  var linkBox   = document.getElementById('eval-link-box');
-  var saLinkBox = document.getElementById('sa-eval-link-box');
-  if (linkBox)   linkBox.classList.toggle('hidden', isSA);
-  if (saLinkBox) saLinkBox.classList.toggle('hidden', !isSA);
+      showScreen('screen-auth');
 
-  showScreen('screen-admin');
-  buildEvalLink();
-  adminTab('tab-overview');
+      return;
+
+    }
+
+    currentSession = {
+
+      id:
+        profile.usuario.id,
+
+      name:
+        profile.usuario.nome,
+
+      email:
+        profile.usuario.email,
+
+      phone:
+        profile.usuario.telefone,
+
+      role:
+        profile.perfil,
+
+      empresa_id:
+        profile.empresa
+
+    };
+
+    var isSA =
+      profile.perfil === 'superadministrador';
+
+
+    document.getElementById('sb-aname').textContent =
+      currentSession.name;
+
+    document.getElementById('sb-aid').textContent =
+      isSA
+        ? 'Acesso Global'
+        : 'ID: ' + currentSession.id;
+
+    document.getElementById('admin-greeting').textContent =
+      'Olá, ' +
+      currentSession.name.split(' ')[0] +
+      ' 👋';
+
+    document.getElementById('admin-sub').textContent =
+      isSA
+        ? 'Visão Global — todos os participantes do sistema'
+        : 'Resumo das avaliações da sua conta';
+
+    document.getElementById('participants-sub').textContent =
+      isSA
+        ? 'Todos os participantes do sistema'
+        : 'Participantes vinculados à sua conta';
+
+
+    document
+      .getElementById('sb-superadmin-badge')
+      .classList
+      .toggle('hidden', !isSA);
+
+    document
+      .getElementById('btn-new-eval-top')
+      .classList
+      .toggle('hidden', isSA);
+
+    document
+      .getElementById('btn-new-eval-part')
+      .classList
+      .toggle('hidden', isSA);
+
+
+    var navNewEval =
+      document.getElementById('nav-new-eval');
+
+    if (navNewEval) {
+
+      navNewEval
+        .parentElement
+        .classList
+        .toggle('hidden', isSA);
+
+    }
+
+
+    var linkBox =
+      document.getElementById('eval-link-box');
+
+    var saLinkBox =
+      document.getElementById('sa-eval-link-box');
+
+    if (linkBox) {
+
+      linkBox
+        .classList
+        .toggle('hidden', isSA);
+
+    }
+
+    if (saLinkBox) {
+
+      saLinkBox
+        .classList
+        .toggle('hidden', !isSA);
+
+    }
+
+
+    showScreen('screen-admin');
+
+    buildEvalLink();
+
+    adminTab('tab-overview');
+
+  }
+
+  catch (error) {
+
+    console.error(
+      '[DISC] Erro ao abrir painel:',
+      error
+    );
+
+    showScreen('screen-auth');
+
+  }
+
 }
 
-function goToAdmin() { openAdmin(); }
+
+function goToAdmin() {
+  openAdmin();
+}
 
 /* ════════════════════════════════════════════════════
    FONTE DE DADOS — filtra por conta ou tudo (SA)
