@@ -234,6 +234,91 @@ function showToast(msg) {
   setTimeout(function() { toast.classList.remove('show'); }, 2800);
 }
 
+/* ==========================================================
+   MÁSCARA DE LOGIN
+   Telefone ou e-mail
+========================================================== */
+
+function loginInputMask(el) {
+
+    var val = el.value;
+
+    /* ---------------------------------------------
+       Modo e-mail
+       Se contém @ ou começa com letra,
+       não aplica máscara.
+    --------------------------------------------- */
+
+    if (
+        val.indexOf('@') !== -1 ||
+        /^[a-zA-Z]/.test(val)
+    ) {
+
+        return;
+
+    }
+
+    /* ---------------------------------------------
+       Modo telefone
+    --------------------------------------------- */
+
+    var digits =
+        val.replace(/\D/g, '');
+
+    if (digits.length === 0) {
+
+        el.value = '';
+
+        return;
+
+    }
+
+    if (digits.length <= 2) {
+
+        el.value =
+            '(' + digits;
+
+    }
+
+    else if (digits.length <= 7) {
+
+        el.value =
+            '(' +
+            digits.slice(0, 2) +
+            ') ' +
+            digits.slice(2);
+
+    }
+
+    else if (digits.length <= 11) {
+
+        el.value =
+            '(' +
+            digits.slice(0, 2) +
+            ') ' +
+            digits.slice(2, 7) +
+            '-' +
+            digits.slice(7);
+
+    }
+
+    else {
+
+        digits =
+            digits.slice(0, 11);
+
+        el.value =
+            '(' +
+            digits.slice(0, 2) +
+            ') ' +
+            digits.slice(2, 7) +
+            '-' +
+            digits.slice(7);
+
+    }
+
+}
+
 /* ════════════════════════════════════════════════════
    UTILITÁRIO — escHtml()
    Sanitiza strings antes de inserir em innerHTML.

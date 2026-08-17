@@ -24,43 +24,45 @@ var AuthService = (function () {
 
         try {
 
-            let email = login.trim();
-
+let email = login.trim();
             /* ---------------------------------------------
-               LOGIN POR TELEFONE
-            --------------------------------------------- */
+   LOGIN POR TELEFONE
+   Busca o e-mail através da RPC segura
+--------------------------------------------- */
 
-            if (!email.includes("@")) {
+if (!email.includes("@")) {
 
-                const telefone =
-                    login.replace(/\D/g, "");
+    const telefone =
+        login.replace(/\D/g, "");
 
-                const { data, error } =
-                    await client
-                        .from("usuarios")
-                        .select("email")
-                        .eq("telefone", telefone)
-                        .eq("ativo", true)
-                        .single();
+    const {
+        data,
+        error
+    } = await client.rpc(
+        "get_login_email_by_phone",
+        {
+            p_telefone: telefone
+        }
+    );
 
-                if (error || !data) {
+    if (error || !data) {
 
-                    return {
+        console.error(
+            "[DISC] Erro ao localizar telefone:",
+            error
+        );
 
-                        success: false,
+        return {
+            success: false,
+            message: "Telefone não encontrado.",
+            error
+        };
 
-                        message:
-                            "Telefone não encontrado."
+    }
 
-                    };
-
-                }
-
-                email = data.email;
-
-            }
-
-            /* ---------------------------------------------
+    email = data;
+}
+/* ---------------------------------------------
                LOGIN SUPABASE
             --------------------------------------------- */
 
