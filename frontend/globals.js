@@ -319,6 +319,67 @@ function loginInputMask(el) {
 
 }
 
+/* ==========================================================
+   MOSTRAR / OCULTAR SENHA
+   Alterna o campo entre password e text
+========================================================== */
+
+function togglePassVisibility(inputId, buttonId) {
+
+    var input = document.getElementById(inputId);
+    var button = document.getElementById(buttonId);
+
+    if (!input) {
+        console.warn(
+            '[DISC] Campo de senha não encontrado:',
+            inputId
+        );
+        return;
+    }
+
+    if (!button) {
+        console.warn(
+            '[DISC] Botão de senha não encontrado:',
+            buttonId
+        );
+        return;
+    }
+
+    if (input.type === 'password') {
+
+        input.type = 'text';
+
+        button.classList.add('showing');
+
+        button.setAttribute(
+            'title',
+            'Ocultar senha'
+        );
+
+        button.setAttribute(
+            'aria-label',
+            'Ocultar senha'
+        );
+
+    } else {
+
+        input.type = 'password';
+
+        button.classList.remove('showing');
+
+        button.setAttribute(
+            'title',
+            'Mostrar senha'
+        );
+
+        button.setAttribute(
+            'aria-label',
+            'Mostrar senha'
+        );
+
+    }
+}
+
 /* ════════════════════════════════════════════════════
    UTILITÁRIO — escHtml()
    Sanitiza strings antes de inserir em innerHTML.
